@@ -6,12 +6,15 @@ import { DashboardHomePage } from "@/pages/dashboard";
 import { ExpensesPage } from "@/pages/expenses";
 import { IncomePage } from "@/pages/income";
 import { LandingPage } from "@/pages/landing";
+import { LoginPage } from "@/pages/login";
 import { NotFoundPage } from "@/pages/not-found";
 import { ProfilePage } from "@/pages/profile";
 import { ReportsPage } from "@/pages/reports";
 import { SettingsPage } from "@/pages/settings";
 import { TransfersPage } from "@/pages/transfers";
 import { ROUTES } from "@/shared/config";
+import RegisterPage from "@/pages/register";
+import { AdjustmentPage } from "@/pages/adjustment";
 
 const toChildPath = (fullPath: string) =>
   fullPath.replace(`${ROUTES.app}/`, "");
@@ -20,6 +23,14 @@ export const appRouter = createBrowserRouter([
   {
     path: ROUTES.landing,
     element: <LandingPage />,
+  },
+  {
+    path: ROUTES.login,
+    element: <LoginPage />,
+  },
+  {
+    path: ROUTES.register,
+    element: <RegisterPage />,
   },
   {
     path: ROUTES.app,
@@ -41,6 +52,7 @@ export const appRouter = createBrowserRouter([
         path: toChildPath(ROUTES.income),
         element: <IncomePage />,
       },
+      { path: toChildPath(ROUTES.adjustment), element: <AdjustmentPage /> },
       {
         path: toChildPath(ROUTES.accounts),
         element: <AccountsPage />,

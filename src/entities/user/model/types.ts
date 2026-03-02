@@ -1,4 +1,4 @@
-import type { CurrencyCode } from "@/shared/types";
+import type { CurrencyCode } from "@/shared/types/currency";
 
 export interface UserProfile {
   id: string;

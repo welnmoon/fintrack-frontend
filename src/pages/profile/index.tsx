@@ -1,6 +1,8 @@
-import { useLogin } from "@/entities/auth/api/use-login";
-import { mockUser } from "@/entities/user";
 import { useGetUser } from "@/entities/user/api/use-get-user";
+import { useLogout } from "@/features/auth-login/api/use-logout";
+import LoginForm from "@/features/auth-login/ui/login-form";
+import UpdateUserCurrencyForm from "@/features/update-user/ui/update-user-currency";
+import UpdateUserForm from "@/features/update-user/ui/update-user";
 import {
   Avatar,
   AvatarFallback,
@@ -15,12 +17,41 @@ import {
 import { PageContainer, PageHeader } from "@/widgets/page-shell";
 
 export function ProfilePage() {
-  const login = useLogin();
-  const { data, isLoading, isError, error, refetch } = useGetUser();
-  const displayName =
-    [data?.firstName, data?.lastName].filter(Boolean).join(" ") ||
-    mockUser.fullName;
-  const displayEmail = data?.email ?? mockUser.email;
+  const { data, isLoading, isError, error } = useGetUser();
+  const {
+    mutate: logoutMutate,
+    isPending: logoutIsPending,
+    isError: logoutIsError,
+    error: logoutError,
+  } = useLogout();
+
+  const logoutHandle = () => {
+    logoutMutate();
+  };
+
+  if (isError) {
+    console.error("Error fetching user data:", error);
+    return (
+      <p>
+        Ошибка при загрузке данных пользователя:{" "}
+        {error instanceof Error ? error.message : "Неизвестная ошибка"}
+      </p>
+    );
+  }
+
+  if (isLoading) {
+    return <p>Загрузка...</p>;
+  }
+
+  if (!data) {
+    return <LoginForm />;
+  }
+
+  const displayName = [data?.firstName, data?.lastName]
+    .filter(Boolean)
+    .join(" ");
+
+  const displayEmail = data?.email;
 
   return (
     <PageContainer>
@@ -29,7 +60,7 @@ export function ProfilePage() {
         description="Профиль пользователя и проверка серверных данных."
       />
 
-      <Card className="max-w-xl">
+      <Card className="max-w-2xl">
         <CardHeader>
           <CardTitle>Профиль пользователя</CardTitle>
         </CardHeader>
@@ -37,7 +68,7 @@ export function ProfilePage() {
           <div className="flex items-center gap-4">
             <Avatar className="h-14 w-14 border">
               <AvatarFallback className="text-lg">
-                {mockUser.initials}
+                {displayName ? displayName.charAt(0).toUpperCase() : "U"}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -50,46 +81,20 @@ export function ProfilePage() {
             <span className="text-sm text-muted-foreground">
               Валюта по умолчанию
             </span>
-            <Badge>{mockUser.defaultCurrency}</Badge>
+            <Badge>{data.defaultCurrency ?? "KZT"}</Badge>
           </div>
+          <UpdateUserCurrencyForm user={data} />
+          <Separator />
+          <UpdateUserForm user={data} />
+          <Separator />
           <Button
-            onClick={() =>
-              login.mutate(
-                { email: "new@gmail.com", password: "4321" },
-                { onSuccess: () => refetch() },
-              )
-            }
+            disabled={logoutIsPending}
+            onClick={() => logoutHandle()}
+            variant={"destructive"}
           >
-            Login
+            {logoutIsPending ? "..." : "Выйти"}
           </Button>
-          {login.isPending && (
-            <p className="text-sm text-muted-foreground">Выполняется вход...</p>
-          )}
-          {login.isSuccess && (
-            <p className="text-sm text-green-500">Вход выполнен успешно!</p>
-          )}
-          {login.isError && (
-            <p className="text-sm text-red-500">
-              Ошибка входа:{" "}
-              {login.error instanceof Error
-                ? login.error.message
-                : "Неизвестная ошибка"}
-            </p>
-          )}
-          {isLoading && (
-            <p className="text-sm text-muted-foreground">
-              Загрузка профиля...
-            </p>
-          )}
-          {isError && (
-            <p className="text-sm text-red-500">
-              Ошибка профиля:{" "}
-              {error instanceof Error ? error.message : "Неизвестная ошибка"}
-            </p>
-          )}
-          <pre className="max-h-48 overflow-auto rounded-md bg-muted p-3 text-xs">
-            {JSON.stringify({ login: login.data, me: data }, null, 2)}
-          </pre>
+          {logoutIsError && JSON.stringify(logoutError)}
         </CardContent>
       </Card>
     </PageContainer>

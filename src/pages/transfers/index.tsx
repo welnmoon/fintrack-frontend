@@ -1,44 +1,51 @@
-import { Plus } from 'lucide-react'
-import { formatCurrency, formatDate } from '@/shared/lib'
-import { Button, Card, CardContent, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui'
-import { PageContainer, PageHeader } from '@/widgets/page-shell'
+import { useGetAccounts } from "@/entities/account/api/use-get-accounts";
+import MakeTransferFormDialog from "@/features/make-transfer/ui/make-transfer-form.dialog";
+import { formatCurrency, formatDate } from "@/shared/lib";
+import {
+  Card,
+  CardContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui";
+import { PageContainer, PageHeader } from "@/widgets/page-shell";
 
 const transferRows = [
   {
-    id: 'trf-1',
-    date: '2026-02-19',
-    fromAccount: 'Накопительный счет',
-    toAccount: 'Основная карта',
+    id: "trf-1",
+    date: "2026-02-19",
+    fromAccount: "Накопительный счет",
+    toAccount: "Основная карта",
     amount: 500,
   },
   {
-    id: 'trf-2',
-    date: '2026-02-17',
-    fromAccount: 'Основная карта',
-    toAccount: 'Наличные',
+    id: "trf-2",
+    date: "2026-02-17",
+    fromAccount: "Основная карта",
+    toAccount: "Наличные",
     amount: 200,
   },
   {
-    id: 'trf-3',
-    date: '2026-02-14',
-    fromAccount: 'Основная карта',
-    toAccount: 'Крипто-кошелек',
+    id: "trf-3",
+    date: "2026-02-14",
+    fromAccount: "Основная карта",
+    toAccount: "Крипто-кошелек",
     amount: 350,
   },
-]
+];
 
 export function TransfersPage() {
+  const { data: accounts } = useGetAccounts();
+
   return (
     <PageContainer>
       <PageHeader
         title="Переводы"
         description="Внутренние переводы между счетами (mock)."
-        actions={
-          <Button>
-            <Plus className="h-4 w-4" />
-            Создать перевод
-          </Button>
-        }
+        actions={<MakeTransferFormDialog accounts={accounts ?? []} />}
       />
 
       <Card>
@@ -58,7 +65,9 @@ export function TransfersPage() {
                   <TableCell>{formatDate(item.date)}</TableCell>
                   <TableCell>{item.fromAccount}</TableCell>
                   <TableCell>{item.toAccount}</TableCell>
-                  <TableCell className="text-right font-medium">{formatCurrency(item.amount)}</TableCell>
+                  <TableCell className="text-right font-medium">
+                    {formatCurrency(item.amount)}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -66,5 +75,5 @@ export function TransfersPage() {
         </CardContent>
       </Card>
     </PageContainer>
-  )
+  );
 }

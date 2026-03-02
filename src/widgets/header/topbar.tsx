@@ -1,7 +1,7 @@
-import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
-import { useSidebarToggle } from '@/features/sidebar-toggle'
-import { APP_ROUTE_TITLES, ROUTES } from '@/shared/config'
+import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { useSidebarToggle } from "@/features/sidebar-toggle";
+import { APP_ROUTE_TITLES, ROUTES } from "@/shared/config";
 import {
   Avatar,
   AvatarFallback,
@@ -12,13 +12,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/shared/ui'
-import { mockUser } from '@/entities/user'
+} from "@/shared/ui";
 
 export function Topbar() {
-  const { pathname } = useLocation()
-  const { isSidebarCollapsed, setMobileSidebarOpen, toggleSidebarCollapse } = useSidebarToggle()
-  const pageTitle = APP_ROUTE_TITLES[pathname] ?? 'Fintrack'
+  const { pathname } = useLocation();
+  const { isSidebarCollapsed, setMobileSidebarOpen, toggleSidebarCollapse } =
+    useSidebarToggle();
+  const pageTitle = APP_ROUTE_TITLES[pathname] ?? "Fintrack";
 
   return (
     <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
@@ -49,7 +49,9 @@ export function Topbar() {
           </Button>
 
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Fintrack</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Fintrack
+            </p>
             <h2 className="text-base font-semibold">{pageTitle}</h2>
           </div>
         </div>
@@ -58,14 +60,16 @@ export function Topbar() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-10 rounded-full px-2">
               <Avatar className="h-8 w-8 border">
-                <AvatarFallback>{mockUser.initials}</AvatarFallback>
+                <AvatarFallback>U</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
-              <p className="font-medium">{mockUser.fullName}</p>
-              <p className="text-xs font-normal text-muted-foreground">{mockUser.email}</p>
+              <p className="font-medium">Пользователь</p>
+              <p className="text-xs font-normal text-muted-foreground">
+                Аккаунт
+              </p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -82,5 +86,5 @@ export function Topbar() {
         </DropdownMenu>
       </div>
     </header>
-  )
+  );
 }

@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui'
-import { PageContainer, PageHeader } from '@/widgets/page-shell'
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
+import { PageContainer, PageHeader } from "@/widgets/page-shell";
 
 export function ReportsPage() {
   return (
@@ -11,14 +11,15 @@ export function ReportsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Скоро здесь будет модуль отчетности</CardTitle>
+          <CardTitle>Отчеты по финансам</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Раздел отчетов будет добавлен позже. На текущем этапе это UI-заглушка.
+            Здесь будут сводные отчеты по доходам, расходам и балансу за
+            выбранный период.
           </p>
         </CardContent>
       </Card>
     </PageContainer>
-  )
+  );
 }
