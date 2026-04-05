@@ -43,7 +43,7 @@ const UpdateUserCurrencyForm = ({ user }: Props) => {
 
   useEffect(() => {
     form.reset(getDefaultValues(user));
-  }, [form, user.defaultCurrency]);
+  }, [form, user]);
 
   const onSubmit = (values: UpdateUserCurrencySchemaType) => {
     if (isPending) return;

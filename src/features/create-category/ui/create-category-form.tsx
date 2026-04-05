@@ -17,10 +17,11 @@ import type {
   CategoryIconKey,
 } from "@/features/get-category-presets/model/types.api";
 import { CATEGORY_COLORS } from "@/shared/config/category-colors";
+import { getCategoryTypeLabel } from "@/entities/category/lib/category-type";
 
 const categoryTypeOptions = [
-  { value: "INCOME", label: "INCOME" },
-  { value: "EXPENSE", label: "EXPENSE" },
+  { value: "INCOME", label: getCategoryTypeLabel("INCOME") },
+  { value: "EXPENSE", label: getCategoryTypeLabel("EXPENSE") },
 ] as const;
 
 const CreateCategoryForm = () => {
@@ -134,14 +135,14 @@ const CreateCategoryForm = () => {
         <Button
           type="submit"
           disabled={
-            !form.watch("colorKey") ||
-            !form.watch("iconKey") ||
+            !selectedColorKey ||
+            !selectedIconKey ||
             isPresetsLoading ||
-            !presets
+            !presets ||
+            isPending
           }
         >
-          {/* {isPending ? "Создаю..." : "Создать категорию"} */}
-          Создать категорию
+          {isPending ? "Создаю..." : "Создать категорию"}
         </Button>
       </div>
 

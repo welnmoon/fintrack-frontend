@@ -38,7 +38,7 @@ const UpdateUserForm = ({ user }: Props) => {
 
   useEffect(() => {
     form.reset(getDefaultValues(user));
-  }, [form, user.email, user.firstName, user.lastName, user.defaultCurrency]);
+  }, [form, user]);
 
   const onSubmit = (values: UpdateUserSchemaType) => {
     if (isPending) return;

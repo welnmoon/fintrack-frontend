@@ -14,13 +14,13 @@ export const useCreateCategory = () => {
 
   return useMutation({
     mutationFn: async (dto: CreateCategoryDto) =>
-      httpClient<UserCategory[]>(categoryApi.create(), {
+      httpClient<UserCategory>(categoryApi.create(), {
         method: "POST",
         credentials: "include",
         body: JSON.stringify(dto),
       }),
     onMutate: async (dto) => {
-      qc.cancelQueries({ queryKey: [userCategoriesQueryKey] });
+      await qc.cancelQueries({ queryKey: [userCategoriesQueryKey] });
 
       const prev = qc.getQueryData<UserCategory[]>([userCategoriesQueryKey]);
 
@@ -29,7 +29,7 @@ export const useCreateCategory = () => {
         createdAt: new Date(),
         iconKey: dto.iconKey as CategoryIconKey,
         name: dto.name,
-        id: "new-category",
+        id: `optimistic-${crypto.randomUUID()}`,
         type: dto.type,
         userId: "current",
         updatedAt: new Date(),

@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { HashLoader } from "react-spinners";
 import { loginSchema, type LoginSchemaType } from "../model/schema";
 import { useLogin } from "../api/use-login";
 import { Navigate } from "react-router-dom";
@@ -71,7 +71,7 @@ const LoginForm = () => {
       <Button type="submit" disabled={isBusy} className="w-full">
         {isPending ? (
           <span className="inline-flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <HashLoader size={16} color="hsl(var(--primary-foreground))" />
             Выполняется вход...
           </span>
         ) : (

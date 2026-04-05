@@ -8,6 +8,7 @@ import { Topbar } from "@/widgets/header";
 import { Sidebar } from "@/widgets/sidebar";
 import { useGetUser } from "@/entities/user/api/use-get-user";
 import { ROUTES } from "@/shared/config";
+import { HashLoader } from "react-spinners";
 
 function DashboardScaffold() {
   const { isSidebarCollapsed } = useSidebarToggle();
@@ -36,9 +37,7 @@ export function DashboardLayout() {
   if (isLoading)
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm font-medium text-muted-foreground">
-          Загрузка данных...
-        </p>
+        <HashLoader size={40} color="hsl(var(--foreground))" />
       </div>
     );
 

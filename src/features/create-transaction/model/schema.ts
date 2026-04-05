@@ -1,4 +1,5 @@
 import z from "zod/v3";
+import { TRANSACTION_EMOTIONS } from "@/entities/transaction/model/types";
 
 export const createTransactionSchema = z.object({
   accountId: z.string().uuid("Выберите счет"),
@@ -15,6 +16,8 @@ export const createTransactionSchema = z.object({
     .refine((value) => !Number.isNaN(new Date(value).getTime()), "Некорректная дата"),
 
   note: z.string().max(200, "Слишком длинный комментарий").optional(),
+
+  emotion: z.enum(TRANSACTION_EMOTIONS).optional(),
 });
 
 export type CreateTransactionType = z.infer<typeof createTransactionSchema>;

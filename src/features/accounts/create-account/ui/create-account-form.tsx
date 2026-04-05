@@ -1,6 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import {
+  DEFAULT_ACCOUNT_BACKGROUND_KEY,
+} from "@/entities/account/lib/account-backgrounds";
+import { AccountBackgroundPicker } from "@/entities/account/ui/account-background-picker";
+import {
   Button,
   Select,
   SelectContent,
@@ -9,6 +13,7 @@ import {
   SelectValue,
 } from "@/shared/ui";
 import FormInput from "@/shared/ui/components/form-input";
+import { useGetAccounts } from "@/entities/account/api/use-get-accounts";
 import { useCreateAccount } from "../api/use-create-accoun";
 import {
   createAccountSchema,
@@ -26,21 +31,27 @@ const currencyOptions = [
   { value: "EUR", label: "EUR" },
 ] as const;
 
+const MAX_ACCOUNTS_PER_USER = 5;
+
 const CreateAccountForm = () => {
+  const { data: accounts } = useGetAccounts();
   const form = useForm<CreateAccountSchemaType>({
     defaultValues: {
       name: "",
       type: "CASH",
       currency: "KZT",
+      backgroundKey: DEFAULT_ACCOUNT_BACKGROUND_KEY,
     },
     resolver: zodResolver(createAccountSchema),
     mode: "onChange",
   });
 
   const { mutate, isPending, error } = useCreateAccount();
+  const accountCount = accounts?.length ?? 0;
+  const hasReachedLimit = accountCount >= MAX_ACCOUNTS_PER_USER;
 
   const onSubmit = (values: CreateAccountSchemaType) => {
-    if (isPending) return;
+    if (isPending || hasReachedLimit) return;
 
     mutate(values, {
       onSuccess: () => {
@@ -48,6 +59,7 @@ const CreateAccountForm = () => {
           name: "",
           type: values.type,
           currency: values.currency,
+          backgroundKey: values.backgroundKey,
         });
       },
     });
@@ -140,10 +152,32 @@ const CreateAccountForm = () => {
       </div>
 
       <div className="md:col-span-4">
-        <Button type="submit" disabled={isPending}>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Фон карты</label>
+          <Controller
+            name="backgroundKey"
+            control={form.control}
+            render={({ field }) => (
+              <AccountBackgroundPicker
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+        </div>
+      </div>
+
+      <div className="md:col-span-4">
+        <Button type="submit" disabled={isPending || hasReachedLimit}>
           {isPending ? "Создаю..." : "Создать счет"}
         </Button>
       </div>
+
+      {hasReachedLimit && (
+        <p className="text-sm text-muted-foreground md:col-span-4">
+          Достигнут лимит счетов: {MAX_ACCOUNTS_PER_USER}.
+        </p>
+      )}
 
       {error instanceof Error && (
         <p className="text-sm text-red-500 md:col-span-4">

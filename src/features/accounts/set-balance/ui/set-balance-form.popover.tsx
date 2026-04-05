@@ -58,7 +58,11 @@ const SetBalanceFormPopover = ({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" sideOffset={8} className="w-80 p-4">
-        <form className="space-y-3" onSubmit={form.handleSubmit(onSubmit)}>
+        <form
+          className="space-y-3"
+          noValidate
+          onSubmit={form.handleSubmit(onSubmit)}
+        >
           <FormInput
             control={form.control}
             name="amount"
@@ -66,9 +70,12 @@ const SetBalanceFormPopover = ({
             type="number"
             inputMode="decimal"
             min={0}
-            step="0.01"
+            step="10"
             placeholder="0"
           />
+          <p className="text-xs text-muted-foreground">
+            Эта сумма станет текущим балансом счета.
+          </p>
 
           <FormInput
             control={form.control}

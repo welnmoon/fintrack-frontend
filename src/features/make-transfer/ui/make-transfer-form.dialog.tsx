@@ -112,6 +112,7 @@ const MakeTransferFormDialog = ({
 
           <form
             className="mt-5 space-y-3"
+            noValidate
             onSubmit={form.handleSubmit(onSubmit)}
           >
             <div className="space-y-1.5">
@@ -201,7 +202,7 @@ const MakeTransferFormDialog = ({
                 type="number"
                 inputMode="decimal"
                 min="0"
-                step="0.01"
+                step="10"
                 placeholder="0"
                 className={
                   form.formState.errors.amount

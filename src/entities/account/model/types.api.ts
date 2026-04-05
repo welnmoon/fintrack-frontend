@@ -1,4 +1,5 @@
 import type { CurrencyCode } from "@/shared/model/currency/schema";
+import type { AccountBackgroundKey } from "../lib/account-backgrounds";
 
 export type AccountType = "CASH" | "BANK";
 
@@ -7,6 +8,7 @@ export interface GetAccount {
   name: string;
   currency: CurrencyCode;
   type: AccountType;
+  backgroundKey: AccountBackgroundKey;
   accountNumber: string | null;
   initialBalance: number;
   balance: number;
@@ -17,4 +19,5 @@ export interface GetAccountOptions {
   name: string;
   type: AccountType;
   currency: CurrencyCode;
+  backgroundKey: AccountBackgroundKey;
 }

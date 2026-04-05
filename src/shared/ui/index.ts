@@ -13,6 +13,7 @@ export {
   CardHeader,
   CardTitle,
 } from "@/shared/ui/components/card";
+export { Calendar } from "@/shared/ui/components/calendar";
 export {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -31,7 +32,13 @@ export {
   DropdownMenuTrigger,
 } from "@/shared/ui/components/dropdown-menu";
 export { Input } from "@/shared/ui/components/input";
+export { Label } from "@/shared/ui/components/label";
 export { default as FormSelect } from "@/shared/ui/components/form-select";
+export {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/ui/components/popover";
 export {
   Select,
   SelectContent,
@@ -73,3 +80,4 @@ export {
   TabsList,
   TabsTrigger,
 } from "@/shared/ui/components/tabs";
+export { Textarea } from "@/shared/ui/components/textarea";

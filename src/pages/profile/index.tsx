@@ -3,6 +3,7 @@ import { useLogout } from "@/features/auth-login/api/use-logout";
 import LoginForm from "@/features/auth-login/ui/login-form";
 import UpdateUserCurrencyForm from "@/features/update-user/ui/update-user-currency";
 import UpdateUserForm from "@/features/update-user/ui/update-user";
+import { HashLoader } from "react-spinners";
 import {
   Avatar,
   AvatarFallback,
@@ -40,7 +41,11 @@ export function ProfilePage() {
   }
 
   if (isLoading) {
-    return <p>Загрузка...</p>;
+    return (
+      <div className="flex items-center justify-center py-10">
+        <HashLoader size={36} color="hsl(var(--foreground))" />
+      </div>
+    );
   }
 
   if (!data) {

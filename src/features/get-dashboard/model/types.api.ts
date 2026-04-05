@@ -1,5 +1,5 @@
 import type { CategoryType } from "@/entities/category";
-import type { TransactionType } from "@/entities/transaction";
+import type { TransactionEmotion, TransactionType } from "@/entities/transaction";
 import type { CurrencyCode } from "@/shared/model/currency/schema";
 
 export type AccountsTotalBalance =
@@ -7,12 +7,14 @@ export type AccountsTotalBalance =
       currency: CurrencyCode;
       total: number;
       fxUnavailable: boolean;
+      fxStale: boolean;
       totalsByCurrency: Record<CurrencyCode, number>;
     }
   | {
       currency: CurrencyCode;
       total: null;
       fxUnavailable: boolean;
+      fxStale: boolean;
       totalsByCurrency: Record<CurrencyCode, number>;
     };
 
@@ -49,6 +51,7 @@ export type DashboardLastTransaction = {
   id: string;
   account: DashboardTransactionAccount;
   type: TransactionType;
+  emotion: TransactionEmotion | null;
   amount: number;
   originalAmount: number | null;
   occurredAt: Date;
@@ -63,9 +66,82 @@ export type DashboardExpensePieItem = {
   amount: number;
 };
 
+export type DashboardExpensePie = {
+  items: DashboardExpensePieItem[];
+  currency: CurrencyCode;
+  fxUnavailable: boolean;
+  fxStale: boolean;
+};
+
+export type DashboardForecastConfidence = "low" | "medium" | "high";
+
+export type DashboardForecast = {
+  currency: CurrencyCode | null;
+  currentBalance: number;
+  spentSoFar: number;
+  recent7Spent: number;
+  monthAvg: number;
+  recent7Avg: number;
+  blendedDailyExpense: number;
+  forecastFutureExpense: number;
+  projectedEndBalance: number;
+  daysPassed: number;
+  daysRemaining: number;
+  basedOnTransactionsCount: number;
+  confidence: DashboardForecastConfidence;
+};
+
+export type DashboardEmotionDistributionItem = {
+  emotion: TransactionEmotion;
+  count: number;
+};
+
+export type DashboardEmotionCategory = {
+  emotion: TransactionEmotion;
+  categoryId: string;
+  categoryName: string;
+  count: number;
+  amount: number;
+};
+
+export type DashboardEmotionsSummary = {
+  currency: CurrencyCode;
+  fxUnavailable: boolean;
+  fxStale: boolean;
+  totalTransactionsWithEmotion: number;
+  impulsiveCount: number;
+  regretCount: number;
+  stressCount: number;
+  impulsiveAmount: number;
+  regretAmount: number;
+  emotionDistribution: DashboardEmotionDistributionItem[];
+  impulsiveExpenseShare: number;
+  regretExpenseShare: number;
+  topEmotionCategories: DashboardEmotionCategory[];
+};
+
 export type GetDashboardResponse = {
   accountsTotalBalance: AccountsTotalBalance;
   expenseAndIncomes: DashboardExpenseAndIncomes;
   lastTransactions: DashboardLastTransaction[];
-  expensePie: DashboardExpensePieItem[];
+  expensePie: DashboardExpensePie;
+  forecast: DashboardForecast;
+  emotionsSummary: DashboardEmotionsSummary;
+};
+
+export type BalanceHistoryInterval = "day" | "week" | "month";
+
+export type DashboardBalanceHistoryPoint = {
+  periodStart: string;
+  periodEnd: string;
+  total: number | null;
+  totalsByCurrency: Partial<Record<CurrencyCode, number>>;
+};
+
+export type GetBalanceHistoryResponse = {
+  interval: BalanceHistoryInterval;
+  currency: CurrencyCode;
+  fxUnavailable: boolean;
+  fxStale: boolean;
+  points: DashboardBalanceHistoryPoint[];
 };

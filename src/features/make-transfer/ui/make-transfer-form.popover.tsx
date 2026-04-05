@@ -88,7 +88,11 @@ const MakeTransferFormPopover = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-80 p-4">
-        <form className="space-y-3" onSubmit={form.handleSubmit(onSubmit)}>
+        <form
+          className="space-y-3"
+          noValidate
+          onSubmit={form.handleSubmit(onSubmit)}
+        >
           <div className="space-y-1.5">
             <label className="text-sm font-medium" htmlFor="transfer-from-account">
               С аккаунта
@@ -170,7 +174,7 @@ const MakeTransferFormPopover = ({
               type="number"
               inputMode="decimal"
               min="0"
-              step="0.01"
+              step="10"
               placeholder="0"
               className={
                 form.formState.errors.amount

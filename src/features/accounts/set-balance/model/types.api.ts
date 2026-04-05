@@ -1,21 +1,16 @@
-import type { TransactionType } from "@/entities/transaction";
-
 export type SetBalancePayload = {
-  accountId: string;
-  type: "ADJUSTMENT";
   amount: number;
   note?: string;
-  occurredAt: string;
 };
 
 export type SetBalanceRequest = {
   id: string;
   userId: string;
-  type: TransactionType;
-  createdAt: Date;
-  updatedAt: Date;
+  type: "ADJUSTMENT";
+  createdAt: string;
+  updatedAt: string;
   amount: number;
-  occurredAt: Date;
+  occurredAt: string;
   note: string | null;
   accountId: string;
   categoryId: string | null;

@@ -1,15 +1,7 @@
-import type { TransactionType } from "@/entities/transaction";
-import type {
-  CategoryColorKey,
-  CategoryIconKey,
-} from "@/features/get-category-presets/model/types.api";
+import { TransactionFeed, type TransactionType } from "@/entities/transaction";
 import { useGetTransactions } from "@/entities/transaction/api/use-get-transactions";
 import { useGetAccountOptions } from "@/entities/account/api/use-get-account-options";
 import CreateTransactionDialog from "@/features/create-transaction/ui/create-transaction-dialog";
-import { DEFAULT_CATEGORY_COLOR } from "@/shared/const/category";
-import { getCategoryColor } from "@/shared/lib/category/get-category-color";
-import { getCategoryIcon } from "@/shared/lib/category/get-category-icon";
-import { formatCurrency, formatDate } from "@/shared/lib";
 import {
   Card,
   CardContent,
@@ -19,38 +11,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from "@/shared/ui";
-import type { LucideIcon } from "lucide-react";
-import { Tag } from "lucide-react";
 import { PageContainer, PageHeader } from "@/widgets/page-shell";
 
 const TRANSACTION_TYPE: TransactionType = "EXPENSE";
-
-function resolveCategoryColor(colorKey: string | null | undefined): string {
-  if (!colorKey) return DEFAULT_CATEGORY_COLOR;
-
-  try {
-    return getCategoryColor(colorKey as CategoryColorKey);
-  } catch {
-    return DEFAULT_CATEGORY_COLOR;
-  }
-}
-
-function resolveCategoryIcon(iconKey: string | null | undefined): LucideIcon {
-  if (!iconKey) return Tag;
-
-  try {
-    return getCategoryIcon(iconKey as CategoryIconKey) ?? Tag;
-  } catch {
-    return Tag;
-  }
-}
 
 export function ExpensesPage() {
   const { data, isLoading, isError, error } = useGetTransactions();
@@ -97,84 +61,14 @@ export function ExpensesPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Дата</TableHead>
-                <TableHead>Описание</TableHead>
-                <TableHead>Категория</TableHead>
-                <TableHead>Счет</TableHead>
-                <TableHead className="text-right">Сумма</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center text-muted-foreground"
-                  >
-                    Загрузка...
-                  </TableCell>
-                </TableRow>
-              )}
-              {isError && (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center text-destructive"
-                  >
-                    Ошибка загрузки: {errorMessage}
-                  </TableCell>
-                </TableRow>
-              )}
-              {!isLoading &&
-                !isError &&
-                (!transactions || transactions.length === 0) && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center text-muted-foreground"
-                    >
-                      Пусто
-                    </TableCell>
-                  </TableRow>
-                )}
-              {!isLoading &&
-                !isError &&
-                transactions?.map((item) => {
-                  const account = accountById.get(item.accountId);
-                  const CategoryIcon = resolveCategoryIcon(item.category?.icon);
-                  const categoryColor = resolveCategoryColor(
-                    item.category?.color,
-                  );
-
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>{formatDate(item.occurredAt)}</TableCell>
-                      <TableCell>{item.note ?? "-"}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <CategoryIcon
-                            className="h-4 w-4 shrink-0"
-                            style={{ color: categoryColor }}
-                          />
-                          <span>{item.category?.name ?? "-"}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {account
-                          ? `${account.name} (${account.currency})`
-                          : item.accountId}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatCurrency(item.amount, item.account.currency)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-            </TableBody>
-          </Table>
+          <TransactionFeed
+            transactions={transactions}
+            accountById={accountById}
+            isLoading={isLoading}
+            isError={isError}
+            errorMessage={errorMessage}
+            emptyLabel="Расходов пока нет"
+          />
         </CardContent>
       </Card>
     </PageContainer>

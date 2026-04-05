@@ -1,4 +1,5 @@
 import { formatCurrency } from "@/shared/lib";
+import { cn } from "@/shared/lib";
 import {
   Badge,
   Card,
@@ -9,9 +10,9 @@ import {
 } from "@/shared/ui";
 import { PageContainer, PageHeader } from "@/widgets/page-shell";
 import { useGetAccounts } from "@/entities/account/api/use-get-accounts";
+import { getAccountBackgroundClassName } from "@/entities/account/lib/account-backgrounds";
+import { AccountActionsMenu } from "@/features/accounts/account-actions/ui/account-actions-menu";
 import CreateAccountForm from "@/features/accounts/create-account/ui/create-account-form";
-import SetBalanceFormPopover from "@/features/accounts/set-balance/ui/set-balance-form.popover";
-import MakeTransferFormPopover from "@/features/make-transfer/ui/make-transfer-form.popover";
 
 export function AccountsPage() {
   const { data: accounts, isLoading, isError, error } = useGetAccounts();
@@ -59,31 +60,37 @@ export function AccountsPage() {
           !isError &&
           accounts &&
           accounts.map((account) => (
-            <Card key={account.id}>
-              <CardHeader className="space-y-3 pb-2">
-                <Badge variant="secondary" className="w-fit">
-                  {account.type}
-                </Badge>
-                <CardTitle>{account.name}</CardTitle>
+            <Card
+              key={account.id}
+              className={cn(
+                "border-0 shadow-lg",
+                getAccountBackgroundClassName(account.backgroundKey),
+              )}
+            >
+              <CardHeader className="space-y-3 pb-2 text-white">
+                <div className="flex items-start justify-between gap-3">
+                  <Badge
+                    variant="outline"
+                    className="w-fit border-white/20 bg-white/10 text-white"
+                  >
+                    {account.type}
+                  </Badge>
+                  <AccountActionsMenu account={account} accounts={accounts} />
+                </div>
+                <div className="space-y-1">
+                  <CardTitle className="pr-8">{account.name}</CardTitle>
+                  <p className="text-xs text-white/75">
+                    {account.accountNumber ?? "Номер счета появится после создания"}
+                  </p>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="text-white">
                 <p className="text-3xl font-semibold tracking-tight">
                   {formatCurrency(account.balance, account.currency)}
                 </p>
-                <div className="mt-3">
-                  <SetBalanceFormPopover
-                    accountId={account.id}
-                    triggerLabel="Изменить баланс"
-                  />
-                </div>
-                <div className="mt-2">
-                  <MakeTransferFormPopover
-                    accounts={accounts}
-                    defaultFromAccountId={account.id}
-                    triggerLabel="Перевести"
-                  />
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">...</p>
+                <p className="mt-4 text-xs text-white/75">
+                  Валюта: {account.currency}
+                </p>
               </CardContent>
             </Card>
           ))}

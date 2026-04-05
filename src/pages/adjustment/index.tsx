@@ -1,7 +1,7 @@
-import type { TransactionType } from "@/entities/transaction";
+import { TransactionFeed, type TransactionType } from "@/entities/transaction";
 import { useGetTransactions } from "@/entities/transaction/api/use-get-transactions";
+import { useGetAccountOptions } from "@/entities/account/api/use-get-account-options";
 import CreateTransactionDialog from "@/features/create-transaction/ui/create-transaction-dialog";
-import { formatCurrency, formatDate } from "@/shared/lib";
 import {
   Card,
   CardContent,
@@ -11,12 +11,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from "@/shared/ui";
 import { PageContainer, PageHeader } from "@/widgets/page-shell";
 
@@ -24,9 +18,13 @@ const TRANSACTION_TYPE: TransactionType = "ADJUSTMENT";
 
 export function AdjustmentPage() {
   const { data, isLoading, isError, error } = useGetTransactions();
+  const { data: accountOptions } = useGetAccountOptions();
   const transactions = data?.filter((item) => item.type === TRANSACTION_TYPE);
   const errorMessage =
     error instanceof Error ? error.message : "Неизвестная ошибка";
+  const accountById = new Map(
+    (accountOptions ?? []).map((account) => [account.id, account]),
+  );
 
   return (
     <PageContainer>
@@ -63,64 +61,14 @@ export function AdjustmentPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Дата</TableHead>
-                <TableHead>Описание</TableHead>
-                <TableHead>Категория</TableHead>
-                <TableHead>Счет</TableHead>
-                <TableHead className="text-right">Сумма</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center text-muted-foreground"
-                  >
-                    Загрузка...
-                  </TableCell>
-                </TableRow>
-              )}
-              {isError && (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center text-destructive"
-                  >
-                    Ошибка загрузки: {errorMessage}
-                  </TableCell>
-                </TableRow>
-              )}
-              {!isLoading &&
-                !isError &&
-                (!transactions || transactions.length === 0) && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center text-muted-foreground"
-                    >
-                      Пусто
-                    </TableCell>
-                  </TableRow>
-                )}
-              {!isLoading &&
-                !isError &&
-                transactions?.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>{formatDate(item.occurredAt)}</TableCell>
-                    <TableCell>{item.note ?? "-"}</TableCell>
-                    <TableCell>{item.category?.name ?? "-"}</TableCell>
-                    <TableCell>{item.accountId}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatCurrency(item.amount, item.account.currency)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
+          <TransactionFeed
+            transactions={transactions}
+            accountById={accountById}
+            isLoading={isLoading}
+            isError={isError}
+            errorMessage={errorMessage}
+            emptyLabel="Корректировок пока нет"
+          />
         </CardContent>
       </Card>
     </PageContainer>

@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Navigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { HashLoader } from "react-spinners";
 import { ROUTES } from "@/shared/config";
 import { useGetUser } from "@/entities/user/api/use-get-user";
 import { Button, Skeleton } from "@/shared/ui";
@@ -100,7 +100,7 @@ const RegisterForm = () => {
       <Button type="submit" disabled={isBusy} className="w-full">
         {isPending ? (
           <span className="inline-flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <HashLoader size={16} color="hsl(var(--primary-foreground))" />
             Создание аккаунта...
           </span>
         ) : (

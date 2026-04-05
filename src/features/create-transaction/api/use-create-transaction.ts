@@ -3,8 +3,11 @@ import { httpClient } from "@/shared/api/http-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CreateTransactionType } from "../model/schema";
 import { dashboardQueryKey } from "@/features/get-dashboard/api/use-get-dashboard";
+import { balanceHistoryQueryKey } from "@/features/get-dashboard/api/use-balance-history";
 import type { Transaction } from "@/entities/transaction";
 import type { CurrencyCode } from "@/shared/model/currency/schema";
+import { userCategoriesQueryKey } from "@/entities/category/api/use-get-categories";
+import type { UserCategory } from "@/entities/category/model/types.api";
 
 export type OptimisticTransaction = Omit<
   Transaction,
@@ -31,6 +34,7 @@ export const useCreateTransaction = () => {
       await qc.invalidateQueries({ queryKey: ["transactions"] });
       await qc.invalidateQueries({ queryKey: ["accounts"] });
       await qc.invalidateQueries({ queryKey: [dashboardQueryKey] });
+      await qc.invalidateQueries({ queryKey: [balanceHistoryQueryKey] });
     },
     onMutate: async (dto) => {
       qc.cancelQueries({ queryKey: ["transactions"] });
@@ -41,13 +45,18 @@ export const useCreateTransaction = () => {
 
       const prevTransactions = qc.getQueryData<Transaction[]>(["transactions"]);
       const accounts = qc.getQueryData<Account[]>(["accounts"]);
+      const categories =
+        qc.getQueryData<UserCategory[]>([userCategoriesQueryKey]);
       const currency =
         accounts?.find((a) => a.id === dto.accountId)?.currency ?? "USD";
+      const category =
+        categories?.find((item) => item.id === dto.categoryId) ?? null;
 
       const optimisticTx: Transaction = {
         id: `optimistic-${crypto.randomUUID()}`,
         userId: "me",
         type: dto.type,
+        emotion: dto.emotion ?? null,
         createdAt: now,
         updatedAt: now,
         amount: dto.amount,
@@ -55,7 +64,13 @@ export const useCreateTransaction = () => {
         note: dto.note ?? null,
         categoryId: dto.categoryId ?? null,
         accountId: dto.accountId,
-        category: null,
+        category: category
+          ? {
+              name: category.name,
+              color: category.colorKey,
+              icon: category.iconKey,
+            }
+          : null,
         account: { currency },
       };
 
