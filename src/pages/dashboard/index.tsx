@@ -55,7 +55,8 @@ export function DashboardHomePage() {
   const fxUnavailable = data?.accountsTotalBalance.fxUnavailable ?? false;
   const fxStale = data?.accountsTotalBalance.fxStale ?? false;
   const totalsByCurrency = data?.accountsTotalBalance;
-  const totalsByCurrencyMap = totalsByCurrency?.totalsByCurrency ?? {};
+  const totalsByCurrencyMap =
+    totalsByCurrency?.totalsByCurrency ?? ({} as Record<string, number>);
 
   const income = data?.expenseAndIncomes.income ?? 0;
   const expense = data?.expenseAndIncomes.expense ?? 0;
@@ -118,9 +119,9 @@ export function DashboardHomePage() {
             ) : (
               <p className="text-2xl font-semibold tracking-tight">
                 {totalBalance === null || totalBalance === undefined
-                  ? Object.entries(totalsByCurrencyMap).map(
-                      ([key, value]) => <p>{formatCurrency(value, key)}</p>,
-                    )
+                  ? Object.entries(totalsByCurrencyMap).map(([key, value]) => (
+                      <p key={key}>{formatCurrency(value, key)}</p>
+                    ))
                   : formatCurrency(totalBalance, totalCurrency)}
               </p>
             )}

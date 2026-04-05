@@ -17,6 +17,7 @@ import { useGetAccounts } from "@/entities/account/api/use-get-accounts";
 import { useCreateAccount } from "../api/use-create-accoun";
 import {
   createAccountSchema,
+  type CreateAccountSchemaInput,
   type CreateAccountSchemaType,
 } from "../model/schema";
 
@@ -35,7 +36,7 @@ const MAX_ACCOUNTS_PER_USER = 5;
 
 const CreateAccountForm = () => {
   const { data: accounts } = useGetAccounts();
-  const form = useForm<CreateAccountSchemaType>({
+  const form = useForm<CreateAccountSchemaInput>({
     defaultValues: {
       name: "",
       type: "CASH",
@@ -50,16 +51,18 @@ const CreateAccountForm = () => {
   const accountCount = accounts?.length ?? 0;
   const hasReachedLimit = accountCount >= MAX_ACCOUNTS_PER_USER;
 
-  const onSubmit = (values: CreateAccountSchemaType) => {
+  const onSubmit = (values: CreateAccountSchemaInput) => {
     if (isPending || hasReachedLimit) return;
 
-    mutate(values, {
+    const dto: CreateAccountSchemaType = createAccountSchema.parse(values);
+
+    mutate(dto, {
       onSuccess: () => {
         form.reset({
           name: "",
-          type: values.type,
-          currency: values.currency,
-          backgroundKey: values.backgroundKey,
+          type: dto.type,
+          currency: dto.currency,
+          backgroundKey: dto.backgroundKey,
         });
       },
     });
@@ -159,7 +162,7 @@ const CreateAccountForm = () => {
             control={form.control}
             render={({ field }) => (
               <AccountBackgroundPicker
-                value={field.value}
+                value={field.value ?? DEFAULT_ACCOUNT_BACKGROUND_KEY}
                 onChange={field.onChange}
               />
             )}

@@ -6,6 +6,7 @@ import { useGetCategoryPresets } from "@/features/get-category-presets/api/use-g
 import { useCreateCategory } from "../api/use-create-category";
 import {
   createCategorySchema,
+  type CreateCategorySchemaInput,
   type CreateCategorySchemaType,
 } from "../model/schema";
 import type { CreateCategoryDto } from "../model/types.api";
@@ -29,7 +30,7 @@ const CreateCategoryForm = () => {
     useGetCategoryPresets();
   const { mutate, isPending, error: createCategoryError } = useCreateCategory();
 
-  const form = useForm<CreateCategorySchemaType>({
+  const form = useForm<CreateCategorySchemaInput>({
     defaultValues: {
       name: "",
       type: "EXPENSE",
@@ -61,21 +62,16 @@ const CreateCategoryForm = () => {
     name: "colorKey",
   });
 
-  const onSubmit = (values: CreateCategorySchemaType) => {
+  const onSubmit = (values: CreateCategorySchemaInput) => {
     if (isPending) return;
 
-    const dto: CreateCategoryDto = {
-      name: values.name,
-      type: values.type,
-      iconKey: values.iconKey as CreateCategoryDto["iconKey"],
-      colorKey: values.colorKey as CreateCategoryDto["colorKey"],
-    };
+    const dto: CreateCategorySchemaType = createCategorySchema.parse(values);
 
-    mutate(dto, {
+    mutate(dto as CreateCategoryDto, {
       onSuccess: () => {
         form.reset({
           name: "",
-          type: values.type,
+          type: dto.type,
           iconKey: undefined,
           colorKey: undefined,
         });

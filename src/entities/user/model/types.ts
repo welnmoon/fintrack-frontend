@@ -1,4 +1,4 @@
-import type { CurrencyCode } from "@/shared/types/currency";
+import type { CurrencyCode } from "@/shared/model/currency/schema";
 
 export interface UserProfile {
   id: string;

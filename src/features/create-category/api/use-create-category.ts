@@ -42,7 +42,7 @@ export const useCreateCategory = () => {
 
       return { prev };
     },
-    onError: (err, dto, ctx) => {
+    onError: (_error, _dto, ctx) => {
       qc.setQueryData([userCategoriesQueryKey], ctx?.prev);
     },
     onSuccess: async () => {

@@ -25,6 +25,7 @@ import {
 import FormInput from "@/shared/ui/components/form-input";
 import {
   createCategorySchema,
+  type CreateCategorySchemaInput,
   type CreateCategorySchemaType,
 } from "@/features/create-category/model/schema";
 import { useUpdateCategory } from "../api/use-update-category";
@@ -49,12 +50,12 @@ export function UpdateCategorySheet({
     useGetCategoryPresets();
   const { mutate, isPending, error } = useUpdateCategory(category.id);
 
-  const form = useForm<CreateCategorySchemaType>({
+  const form = useForm<CreateCategorySchemaInput>({
     defaultValues: {
       name: category.name,
       type: category.type,
-      iconKey: category.iconKey ?? undefined,
-      colorKey: category.colorKey ?? undefined,
+      iconKey: (category.iconKey ?? undefined) as CategoryIconKey | undefined,
+      colorKey: (category.colorKey ?? undefined) as CategoryColorKey | undefined,
     },
     resolver: zodResolver(createCategorySchema),
     mode: "onChange",
@@ -66,8 +67,8 @@ export function UpdateCategorySheet({
     form.reset({
       name: category.name,
       type: category.type,
-      iconKey: category.iconKey ?? undefined,
-      colorKey: category.colorKey ?? undefined,
+      iconKey: (category.iconKey ?? undefined) as CategoryIconKey | undefined,
+      colorKey: (category.colorKey ?? undefined) as CategoryColorKey | undefined,
     });
   }, [category, form, open]);
 
@@ -91,8 +92,10 @@ export function UpdateCategorySheet({
     }));
   }, [presets, selectedType]);
 
-  const onSubmit = (values: CreateCategorySchemaType) => {
-    mutate(values, {
+  const onSubmit = (values: CreateCategorySchemaInput) => {
+    const dto: CreateCategorySchemaType = createCategorySchema.parse(values);
+
+    mutate(dto, {
       onSuccess: () => {
         onOpenChange(false);
       },

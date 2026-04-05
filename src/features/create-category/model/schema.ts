@@ -1,4 +1,8 @@
 import z from "zod/v3";
+import type {
+  CategoryColorKey,
+  CategoryIconKey,
+} from "@/features/get-category-presets/model/types.api";
 
 export const createCategorySchema = z.object({
   name: z
@@ -9,8 +13,9 @@ export const createCategorySchema = z.object({
   type: z.enum(["INCOME", "EXPENSE"], {
     errorMap: () => ({ message: "Тип должен быть INCOME или EXPENSE" }),
   }),
-  iconKey: z.string().optional(),
-  colorKey: z.string().optional(),
+  iconKey: z.custom<CategoryIconKey>().optional(),
+  colorKey: z.custom<CategoryColorKey>().optional(),
 });
 
-export type CreateCategorySchemaType = z.infer<typeof createCategorySchema>;
+export type CreateCategorySchemaInput = z.input<typeof createCategorySchema>;
+export type CreateCategorySchemaType = z.output<typeof createCategorySchema>;

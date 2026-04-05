@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { ArrowRight, ArrowUpRight, Minus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { APP_NAME, APP_TAGLINE } from "@/shared/const";
 import { ROUTES } from "@/shared/config";
-import { Button } from "@/shared/ui";
 
 /* ─── Font injection ─── */
 const FontLink = () => (
@@ -282,8 +281,6 @@ const kpiItems = [
 ];
 
 export function LandingPage() {
-  const [menuOpen, setMenuOpen] = useState(false);
-
   return (
     <>
       <FontLink />
