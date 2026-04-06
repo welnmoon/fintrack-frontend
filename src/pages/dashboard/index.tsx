@@ -8,13 +8,16 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
+import { Link } from "react-router-dom";
 import { EmotionBadge } from "@/entities/transaction";
 import { formatCurrency, formatDate } from "@/shared/lib";
 import { useGetDashboard } from "@/features/get-dashboard/api/use-get-dashboard";
 import { useExpensePie } from "@/features/get-dashboard/api/use-expense-pie";
 import { forecastConfidenceMap } from "@/features/get-dashboard/model/const";
+import { ROUTES } from "@/shared/config";
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   CardDescription,
@@ -404,7 +407,29 @@ export function DashboardHomePage() {
           </CardContent>
         </Card>
       </div>
-      <PriceChart />
+
+      <Card>
+        <CardHeader
+          className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <CardTitle>Forex</CardTitle>
+            <CardDescription>
+              Живые котировки валютных пар. Для полного анализа открой отдельную
+              страницу графика.
+            </CardDescription>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link to={ROUTES.forex}>Смотреть подробно</Link>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <PriceChart
+            showChartTypeControl={false}
+            chartViewportClassName="h-[320px] lg:h-[360px]"
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

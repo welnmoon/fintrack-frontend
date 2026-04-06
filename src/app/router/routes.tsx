@@ -4,6 +4,7 @@ import { AccountsPage } from "@/pages/accounts";
 import { CategoriesPage } from "@/pages/categories";
 import { DashboardHomePage } from "@/pages/dashboard";
 import { ExpensesPage } from "@/pages/expenses";
+import { ForexPage } from "@/pages/forex";
 import { IncomePage } from "@/pages/income";
 import { LandingPage } from "@/pages/landing";
 import { LoginPage } from "@/pages/login";
@@ -43,6 +44,10 @@ export const appRouter = createBrowserRouter([
       {
         path: toChildPath(ROUTES.overview),
         element: <DashboardHomePage />,
+      },
+      {
+        path: toChildPath(ROUTES.forex),
+        element: <ForexPage />,
       },
       {
         path: toChildPath(ROUTES.expenses),

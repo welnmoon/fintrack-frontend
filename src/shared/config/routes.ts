@@ -4,6 +4,7 @@ export const ROUTES = {
   register: "/register",
   app: "/app",
   overview: "/app/overview",
+  forex: "/app/forex",
   expenses: "/app/expenses",
   income: "/app/income",
   adjustment: "/app/adjustment",
@@ -18,6 +19,7 @@ export const ROUTES = {
 export const APP_ROUTE_TITLES: Record<string, string> = {
   [ROUTES.app]: "Главное",
   [ROUTES.overview]: "Главное",
+  [ROUTES.forex]: "Forex",
   [ROUTES.expenses]: "Расходы",
   [ROUTES.income]: "Доходы",
   [ROUTES.adjustment]: "Корректировки",

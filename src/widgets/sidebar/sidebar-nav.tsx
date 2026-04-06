@@ -1,4 +1,5 @@
 import {
+  Activity,
   ArrowLeftRight,
   BarChart3,
   CreditCard,
@@ -23,6 +24,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Главное", to: ROUTES.overview, icon: Gauge },
+  { label: "Forex", to: ROUTES.forex, icon: Activity },
   { label: "Расходы", to: ROUTES.expenses, icon: TrendingDown },
   { label: "Доходы", to: ROUTES.income, icon: TrendingUp },
   { label: "Счета", to: ROUTES.accounts, icon: CreditCard },

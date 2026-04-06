@@ -1,23 +1,29 @@
+import { useTheme } from "@/app/providers/theme-provider";
+import { cn } from "@/shared/lib";
 import { BACKEND_URL } from "@/shared/config/api";
 import {
+  Badge,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui";
-import { useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import {
   AreaSeries,
+  CandlestickSeries,
   ColorType,
   createChart,
   type AreaData,
+  type CandlestickData,
   type IChartApi,
   type ISeriesApi,
   type Time,
 } from "lightweight-charts";
 
-type ForexInterval = "1min" | "5min" | "15min" | "1h" | "4h" | "1day";
+export type ForexInterval = "1min" | "5min" | "15min" | "1h" | "4h" | "1day";
+export type ForexChartType = "area" | "candles";
 
 type ForexSseSnapshot = {
   symbol: string;
@@ -39,19 +45,14 @@ type ForexSseSnapshot = {
   }>;
 };
 
-const SYMBOL_OPTIONS = [
+export const FOREX_SYMBOL_OPTIONS = [
   "EUR/USD",
   "GBP/USD",
   "USD/JPY",
   "USD/KZT",
   "EUR/KZT",
 ] as const;
-type SymbolType = (typeof SYMBOL_OPTIONS)[number];
-
-type Props = {
-  symbol?: SymbolType;
-  interval?: ForexInterval;
-};
+type SymbolType = (typeof FOREX_SYMBOL_OPTIONS)[number];
 
 const INTERVAL_OPTIONS: ForexInterval[] = [
   "1min",
@@ -62,59 +63,183 @@ const INTERVAL_OPTIONS: ForexInterval[] = [
   "1day",
 ];
 
+const CHART_TYPE_OPTIONS: Array<{
+  value: ForexChartType;
+  label: string;
+}> = [
+  { value: "area", label: "Линия" },
+  { value: "candles", label: "Свечи" },
+];
+
+type Props = {
+  symbol?: SymbolType;
+  interval?: ForexInterval;
+  chartType?: ForexChartType;
+  showChartTypeControl?: boolean;
+  showExtendedMeta?: boolean;
+  chartViewportClassName?: string;
+  className?: string;
+};
+
+type Status = "connecting" | "live" | "stale" | "error";
+
+type ThemePalette = {
+  background: string;
+  text: string;
+  border: string;
+  grid: string;
+  line: string;
+  lineSoft: string;
+  lineFade: string;
+  up: string;
+  down: string;
+};
+
+function readCssColor(
+  variableName: string,
+  fallback: string,
+  alpha?: number,
+) {
+  if (typeof window === "undefined") return fallback;
+
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(variableName)
+    .trim();
+
+  if (!value) return fallback;
+
+  return alpha === undefined ? `hsl(${value})` : `hsl(${value} / ${alpha})`;
+}
+
+function getThemePalette(): ThemePalette {
+  return {
+    background: readCssColor("--card", "#ffffff"),
+    text: readCssColor("--foreground", "#1f2937"),
+    border: readCssColor("--border", "#d1d5db"),
+    grid: readCssColor("--border", "rgba(209, 213, 219, 0.35)", 0.35),
+    line: readCssColor("--primary", "#2962ff"),
+    lineSoft: readCssColor("--primary", "rgba(41, 98, 255, 0.24)", 0.24),
+    lineFade: readCssColor("--primary", "rgba(41, 98, 255, 0.04)", 0.04),
+    up: readCssColor("--accent", "#16a34a"),
+    down: readCssColor("--destructive", "#ef4444"),
+  };
+}
+
+function getStatusLabel(status: Status) {
+  switch (status) {
+    case "live":
+      return "SSE live";
+    case "stale":
+      return "Источник недоступен, показаны последние данные";
+    case "connecting":
+      return "Подключение...";
+    case "error":
+    default:
+      return "Поток недоступен";
+  }
+}
+
+function getStatusVariant(status: Status): "default" | "secondary" | "outline" {
+  switch (status) {
+    case "live":
+      return "default";
+    case "stale":
+      return "secondary";
+    case "connecting":
+    case "error":
+    default:
+      return "outline";
+  }
+}
+
 export default function PriceChart({
   symbol = "USD/KZT",
   interval = "15min",
+  chartType = "area",
+  showChartTypeControl = true,
+  showExtendedMeta = false,
+  chartViewportClassName,
+  className,
 }: Props) {
+  const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
+  const hasFittedRef = useRef(false);
+  const seriesRef = useRef<
+    ISeriesApi<"Area"> | ISeriesApi<"Candlestick"> | null
+  >(null);
 
-  const [data, setData] = useState<AreaData<Time>[]>([]);
-  const [status, setStatus] = useState<
-    "connecting" | "live" | "stale" | "error"
-  >("connecting");
+  const [candles, setCandles] = useState<ForexSseSnapshot["candles"]>([]);
+  const [status, setStatus] = useState<Status>("connecting");
   const [selectedSymbol, setSelectedSymbol] = useState<SymbolType>(symbol);
   const [selectedInterval, setSelectedInterval] =
     useState<ForexInterval>(interval);
+  const [selectedChartType, setSelectedChartType] =
+    useState<ForexChartType>(chartType);
   const [streamError, setStreamError] = useState<string | null>(null);
+  const [meta, setMeta] = useState<
+    Pick<
+      ForexSseSnapshot,
+      | "symbol"
+      | "interval"
+      | "updatedAt"
+      | "lastPrice"
+      | "stale"
+      | "sourceUnavailable"
+      | "backfillCompleted"
+      | "lastSuccessfulSyncAt"
+      | "lastFailedSyncAt"
+      | "lastErrorMessage"
+    > | null
+  >(null);
 
-  const [meta, setMeta] = useState<Pick<
-    ForexSseSnapshot,
-    | "symbol"
-    | "interval"
-    | "updatedAt"
-    | "sourceUnavailable"
-    | "backfillCompleted"
-    | "lastSuccessfulSyncAt"
-    | "lastFailedSyncAt"
-    | "lastErrorMessage"
-  > | null>(null);
+  const areaData = useMemo<AreaData<Time>[]>(
+    () =>
+      candles.map((candle) => ({
+        time: candle.time as Time,
+        value: candle.close,
+      })),
+    [candles],
+  );
+  const candlestickData = useMemo<CandlestickData<Time>[]>(
+    () =>
+      candles.map((candle) => ({
+        time: candle.time as Time,
+        open: candle.open,
+        high: candle.high,
+        low: candle.low,
+        close: candle.close,
+      })),
+    [candles],
+  );
+
+  const resetStreamState = () => {
+    startTransition(() => {
+      setStatus("connecting");
+      setStreamError(null);
+      setMeta(null);
+      setCandles([]);
+    });
+    hasFittedRef.current = false;
+  };
 
   useEffect(() => {
     const url = new URL(`${BACKEND_URL}/forex/stream`);
     url.searchParams.set("symbol", selectedSymbol);
     url.searchParams.set("interval", selectedInterval);
 
-    setStatus("connecting");
-    setStreamError(null);
-    setMeta(null);
-
     const eventSource = new EventSource(url.toString(), {
       withCredentials: true,
     });
 
     const applyPayload = (payload: ForexSseSnapshot) => {
-      const nextData: AreaData<Time>[] = payload.candles.map((candle) => ({
-        time: candle.time as Time,
-        value: candle.close,
-      }));
-
-      setData(nextData);
+      setCandles(payload.candles);
       setMeta({
         symbol: payload.symbol,
         interval: payload.interval,
         updatedAt: payload.updatedAt,
+        lastPrice: payload.lastPrice,
+        stale: payload.stale,
         sourceUnavailable: payload.sourceUnavailable,
         backfillCompleted: payload.backfillCompleted,
         lastSuccessfulSyncAt: payload.lastSuccessfulSyncAt,
@@ -168,133 +293,235 @@ export default function PriceChart({
   }, [selectedInterval, selectedSymbol]);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-
     const container = containerRef.current;
 
-    const chart = createChart(container, {
-      width: container.clientWidth,
-      height: 300,
-      layout: {
-        background: { type: ColorType.Solid, color: "#ffffff" },
-        textColor: "#222",
-      },
-      grid: {
-        vertLines: { visible: false },
-        horzLines: { color: "#eee" },
-      },
-      rightPriceScale: {
-        borderVisible: false,
-      },
-      timeScale: {
-        borderVisible: false,
-      },
+    if (!container) return;
+    let chart: IChartApi | null = null;
+    let resizeObserver: ResizeObserver | null = null;
+
+    const frameId = window.requestAnimationFrame(() => {
+      const palette = getThemePalette();
+
+      chart = createChart(container, {
+        width: container.clientWidth,
+        height: container.clientHeight,
+        layout: {
+          background: { type: ColorType.Solid, color: palette.background },
+          textColor: palette.text,
+        },
+        grid: {
+          vertLines: { color: palette.grid },
+          horzLines: { color: palette.grid },
+        },
+        rightPriceScale: {
+          borderColor: palette.border,
+        },
+        timeScale: {
+          borderColor: palette.border,
+        },
+        crosshair: {
+          vertLine: { color: palette.border },
+          horzLine: { color: palette.border },
+        },
+      });
+
+      const series =
+        selectedChartType === "candles"
+          ? chart.addSeries(CandlestickSeries, {
+              upColor: palette.up,
+              downColor: palette.down,
+              borderUpColor: palette.up,
+              borderDownColor: palette.down,
+              wickUpColor: palette.up,
+              wickDownColor: palette.down,
+            })
+          : chart.addSeries(AreaSeries, {
+            lineColor: palette.line,
+            topColor: palette.lineSoft,
+            bottomColor: palette.lineFade,
+          });
+
+      chart.timeScale().fitContent();
+      hasFittedRef.current = false;
+
+      resizeObserver = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (!entry || !chart) return;
+
+        const { width, height } = entry.contentRect;
+        chart.applyOptions({
+          width,
+          height,
+        });
+        chart.timeScale().fitContent();
+      });
+
+      resizeObserver.observe(container);
+
+      chartRef.current = chart;
+      seriesRef.current = series;
     });
-
-    const series = chart.addSeries(AreaSeries, {
-      lineColor: "#2962FF",
-      topColor: "rgba(41, 98, 255, 0.4)",
-      bottomColor: "rgba(41, 98, 255, 0.0)",
-    });
-
-    series.setData(data);
-    chart.timeScale().fitContent();
-
-    const handleResize = () => {
-      chart.applyOptions({ width: container.clientWidth });
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    chartRef.current = chart;
-    seriesRef.current = series;
 
     return () => {
-      window.removeEventListener("resize", handleResize);
-      chart.remove();
+      window.cancelAnimationFrame(frameId);
+      resizeObserver?.disconnect();
+      chart?.remove();
       chartRef.current = null;
       seriesRef.current = null;
     };
-  }, []);
+  }, [selectedChartType, theme]);
 
   useEffect(() => {
     if (!seriesRef.current) return;
 
-    seriesRef.current.setData(data);
-    chartRef.current?.timeScale().fitContent();
-  }, [data]);
+    if (selectedChartType === "candles") {
+      (seriesRef.current as ISeriesApi<"Candlestick">).setData(candlestickData);
+    } else {
+      (seriesRef.current as ISeriesApi<"Area">).setData(areaData);
+    }
+
+    const pointsCount =
+      selectedChartType === "candles" ? candlestickData.length : areaData.length;
+
+    if (!hasFittedRef.current && pointsCount > 0) {
+      chartRef.current?.timeScale().fitContent();
+      hasFittedRef.current = true;
+    }
+  }, [areaData, candlestickData, selectedChartType]);
 
   return (
-    <div className="w-full space-y-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <Select
-          value={selectedSymbol}
-          onValueChange={(value) => setSelectedSymbol(value as SymbolType)}
-        >
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Пара" />
-          </SelectTrigger>
-          <SelectContent>
-            {SYMBOL_OPTIONS.map((item) => (
-              <SelectItem key={item} value={item}>
-                {item}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className={cn("w-full space-y-4", className)}>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            value={selectedSymbol}
+            onValueChange={(value) => {
+              resetStreamState();
+              setSelectedSymbol(value as SymbolType);
+            }}
+          >
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Пара" />
+            </SelectTrigger>
+            <SelectContent>
+              {FOREX_SYMBOL_OPTIONS.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {item}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select
-          value={selectedInterval}
-          onValueChange={(value) => setSelectedInterval(value as ForexInterval)}
-        >
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder="Интервал" />
-          </SelectTrigger>
-          <SelectContent>
-            {INTERVAL_OPTIONS.map((item) => (
-              <SelectItem key={item} value={item}>
-                {item}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select
+            value={selectedInterval}
+            onValueChange={(value) => {
+              resetStreamState();
+              setSelectedInterval(value as ForexInterval);
+            }}
+          >
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Интервал" />
+            </SelectTrigger>
+            <SelectContent>
+              {INTERVAL_OPTIONS.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {item}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {showChartTypeControl && (
+            <Select
+              value={selectedChartType}
+              onValueChange={(value) =>
+                setSelectedChartType(value as ForexChartType)
+              }
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Вид" />
+              </SelectTrigger>
+              <SelectContent>
+                {CHART_TYPE_OPTIONS.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline">
+            {meta?.symbol ?? selectedSymbol} · {meta?.interval ?? selectedInterval}
+          </Badge>
+          <Badge variant={getStatusVariant(status)}>{getStatusLabel(status)}</Badge>
+          {meta?.lastPrice ? (
+            <Badge variant="secondary">Last: {meta.lastPrice.toFixed(3)}</Badge>
+          ) : null}
+        </div>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>
-          {meta?.symbol ?? selectedSymbol} · {meta?.interval ?? selectedInterval}
-        </span>
-        <span>
-          {status === "live"
-            ? "SSE live"
-            : status === "stale"
-              ? "Источник недоступен, показаны последние данные"
-              : status === "connecting"
-                ? "Подключение..."
-                : "Поток недоступен"}
-        </span>
+      <div className="rounded-2xl border bg-card/60 p-3 sm:p-4">
+        <div
+          ref={containerRef}
+          className={cn(
+            "w-full rounded-xl",
+            chartViewportClassName ?? "h-[320px] sm:h-[360px]",
+          )}
+        />
       </div>
 
-      <div ref={containerRef} style={{ width: "100%" }} />
+      <div
+        className={cn(
+          "grid gap-3 text-xs text-muted-foreground",
+          showExtendedMeta ? "sm:grid-cols-2 xl:grid-cols-4" : "sm:grid-cols-2",
+        )}
+      >
+        <div className="rounded-xl border bg-card/50 px-3 py-3">
+          <p className="text-[11px] uppercase tracking-[0.14em]">Обновлено</p>
+          <p className="mt-2 text-sm font-medium text-foreground">
+            {meta?.updatedAt
+              ? new Date(meta.updatedAt).toLocaleTimeString("ru-RU")
+              : "Ожидание данных"}
+          </p>
+        </div>
 
-      {meta?.updatedAt ? (
-        <p className="text-xs text-muted-foreground">
-          Обновлено: {new Date(meta.updatedAt).toLocaleTimeString("ru-RU")}
-        </p>
-      ) : null}
+        <div className="rounded-xl border bg-card/50 px-3 py-3">
+          <p className="text-[11px] uppercase tracking-[0.14em]">История</p>
+          <p className="mt-2 text-sm font-medium text-foreground">
+            {meta?.backfillCompleted ? "Синхронизирована" : "Догружается"}
+          </p>
+        </div>
 
-      <p className="text-xs text-muted-foreground">
-        История: {meta?.backfillCompleted ? "синхронизирована" : "догружается"}
-      </p>
+        {showExtendedMeta && (
+          <div className="rounded-xl border bg-card/50 px-3 py-3">
+            <p className="text-[11px] uppercase tracking-[0.14em]">
+              Последний успешный sync
+            </p>
+            <p className="mt-2 text-sm font-medium text-foreground">
+              {meta?.lastSuccessfulSyncAt
+                ? new Date(meta.lastSuccessfulSyncAt).toLocaleString("ru-RU")
+                : "Пока нет"}
+            </p>
+          </div>
+        )}
 
-      {meta?.lastSuccessfulSyncAt ? (
-        <p className="text-xs text-muted-foreground">
-          Последний успешный sync: {new Date(meta.lastSuccessfulSyncAt).toLocaleString("ru-RU")}
-        </p>
-      ) : null}
+        {showExtendedMeta && (
+          <div className="rounded-xl border bg-card/50 px-3 py-3">
+            <p className="text-[11px] uppercase tracking-[0.14em]">Источник</p>
+            <p className="mt-2 text-sm font-medium text-foreground">
+              {meta?.sourceUnavailable
+                ? "Показаны последние данные"
+                : "Live feed"}
+            </p>
+          </div>
+        )}
+      </div>
 
       {(status === "stale" || streamError || meta?.lastErrorMessage) && (
-        <p className="text-xs text-amber-600">
+        <p className="text-sm text-amber-600">
           {streamError ??
             meta?.lastErrorMessage ??
             "Источник котировок недоступен, данные временно заморожены"}
