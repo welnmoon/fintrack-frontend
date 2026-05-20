@@ -27,6 +27,6 @@ export const APP_ROUTE_TITLES: Record<string, string> = {
   [ROUTES.categories]: "Категории",
   [ROUTES.transfers]: "Переводы",
   [ROUTES.reports]: "Отчеты",
-  [ROUTES.profile]: "Профиль",
+  [ROUTES.profile]: "Настройки",
   [ROUTES.settings]: "Настройки",
 };

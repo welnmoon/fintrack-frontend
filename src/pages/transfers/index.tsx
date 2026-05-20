@@ -49,7 +49,7 @@ export function TransfersPage() {
       />
 
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>

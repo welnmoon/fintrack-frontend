@@ -1,29 +1,47 @@
-import {
-  Brain,
-  Gauge,
-  Sparkles,
-  TriangleAlert,
-} from "lucide-react";
-import {
-  EmotionBadge,
-  getTransactionEmotionMeta,
-} from "@/entities/transaction";
+import type { TransactionEmotion } from "@/entities/transaction";
+import { getTransactionEmotionMeta } from "@/entities/transaction";
 import type { DashboardEmotionsSummary } from "@/features/get-dashboard/model/types.api";
-import { cn, formatCurrency } from "@/shared/lib";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Skeleton,
-} from "@/shared/ui";
+import { formatCurrency } from "@/shared/lib";
+import { Card, CardContent, Skeleton } from "@/shared/ui";
 
 type EmotionSummaryCardProps = {
   summary?: DashboardEmotionsSummary;
   isLoading?: boolean;
   isError?: boolean;
 };
+
+const emotionBarColorMap: Record<TransactionEmotion, string> = {
+  NEUTRAL: "#BBBDB8",
+  HAPPY: "#1A9E6A",
+  IMPULSIVE: "#E8A020",
+  STRESS: "#D94F3D",
+  REGRET: "#7B5EA7",
+};
+
+const emotionTagClassMap: Record<TransactionEmotion, string> = {
+  NEUTRAL: "border-[#E6E3DC] bg-[#F7F6F3] text-[#888]",
+  HAPPY: "border-[#C2EDD8] bg-[#EDFAF4] text-[#1A9E6A]",
+  IMPULSIVE: "border-[#F3D9A0] bg-[#FEF5E6] text-[#C07C1A]",
+  STRESS: "border-[#F5CEC9] bg-[#FEF1EF] text-[#D94F3D]",
+  REGRET: "border-[#DDCFEF] bg-[#F5F0FC] text-[#7B5EA7]",
+};
+
+function formatExpenseShare(share: number) {
+  return `${share.toLocaleString("ru-RU", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}% расходов`;
+}
+
+function formatOperationWord(count: number) {
+  if (count % 10 === 1 && count % 100 !== 11) return "операция";
+
+  if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) {
+    return "операции";
+  }
+
+  return "операций";
+}
 
 export function EmotionSummaryCard({
   summary,
@@ -33,19 +51,19 @@ export function EmotionSummaryCard({
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Эмоциональный фон расходов</CardTitle>
-          <CardDescription>
-            Аналитика по эмоциональной оценке операций.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid gap-3 md:grid-cols-3">
-            <Skeleton className="h-24 rounded-xl" />
-            <Skeleton className="h-24 rounded-xl" />
-            <Skeleton className="h-24 rounded-xl" />
+        <CardContent className="p-0">
+          <div className="space-y-4 p-6">
+            <Skeleton className="h-6 w-72" />
+            <div className="grid gap-3 md:grid-cols-3">
+              <Skeleton className="h-24 rounded-xl" />
+              <Skeleton className="h-24 rounded-xl" />
+              <Skeleton className="h-24 rounded-xl" />
+            </div>
+            <div className="grid gap-3 lg:grid-cols-2">
+              <Skeleton className="h-48 rounded-xl" />
+              <Skeleton className="h-48 rounded-xl" />
+            </div>
           </div>
-          <Skeleton className="h-28 rounded-xl" />
         </CardContent>
       </Card>
     );
@@ -54,173 +72,202 @@ export function EmotionSummaryCard({
   if (isError || !summary) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Эмоциональный фон расходов</CardTitle>
-          <CardDescription>
-            Аналитика по эмоциональной оценке операций.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-xl border border-dashed p-4 text-sm text-destructive">
-            Не удалось загрузить эмоциональную аналитику.
+        <CardContent className="p-0">
+          <div className="p-6">
+            <div className="rounded-xl border border-dashed p-4 text-sm text-destructive">
+              Не удалось загрузить эмоциональную аналитику.
+            </div>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const total = summary.totalTransactionsWithEmotion;
+  const maxEmotionCount = summary.emotionDistribution.reduce(
+    (max, item) => Math.max(max, item.count),
+    0,
+  );
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Эмоциональный фон расходов</CardTitle>
-        <CardDescription>
-          Быстрый срез по импульсивным, стрессовым и нежелательным покупкам.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-2xl border bg-card/60 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-muted-foreground">
+      <CardContent className="p-0">
+        <div className="overflow-hidden rounded-[14px] border border-[#DDD9D1] bg-white">
+          <div className="flex flex-wrap items-baseline gap-3 border-b border-[#EDEAE4] px-6 py-4">
+            <span className="text-[15px] font-semibold tracking-[-0.2px] text-[#111]">
+              Эмоциональный фон расходов
+            </span>
+            <span className="text-xs text-[#B5B0A8]">
+              Быстрый срез по импульсивным, стрессовым и нежелательным покупкам
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 border-b border-[#EDEAE4] md:grid-cols-3">
+            <div className="border-b border-[#EDEAE4] px-6 py-[18px] md:border-r md:border-b-0">
+              <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.8px] text-[#AAA49C]">
                 Импульсивные траты
-              </span>
-              <Sparkles className="h-4 w-4 text-amber-500" />
+              </p>
+              <div className="mb-1 flex items-baseline gap-2.5">
+                <span className="font-mono text-4xl font-bold leading-none tracking-[-2px] text-[#C07C1A]">
+                  {summary.impulsiveCount}
+                </span>
+                <div className="pb-0.5">
+                  <p className="font-mono text-xs font-medium text-[#888]">
+                    {formatCurrency(summary.impulsiveAmount, summary.currency)}
+                  </p>
+                  <p className="text-[11px] text-[#C0BCB4]">
+                    {formatExpenseShare(summary.impulsiveExpenseShare)}
+                  </p>
+                </div>
+              </div>
             </div>
-            <p className="mt-3 text-2xl font-semibold tracking-tight">
-              {summary.impulsiveCount}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {formatCurrency(summary.impulsiveAmount, summary.currency)} •{" "}
-              {summary.impulsiveExpenseShare}% от всех расходов
-            </p>
-          </div>
 
-          <div className="rounded-2xl border bg-card/60 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-muted-foreground">
+            <div className="border-b border-[#EDEAE4] px-6 py-[18px] md:border-r md:border-b-0">
+              <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.8px] text-[#AAA49C]">
                 Сожаление после покупки
-              </span>
-              <TriangleAlert className="h-4 w-4 text-slate-500" />
+              </p>
+              <div className="mb-1 flex items-baseline gap-2.5">
+                <span className="font-mono text-4xl font-bold leading-none tracking-[-2px] text-[#7B5EA7]">
+                  {summary.regretCount}
+                </span>
+                <div className="pb-0.5">
+                  <p className="font-mono text-xs font-medium text-[#888]">
+                    {formatCurrency(summary.regretAmount, summary.currency)}
+                  </p>
+                  <p className="text-[11px] text-[#C0BCB4]">
+                    {formatExpenseShare(summary.regretExpenseShare)}
+                  </p>
+                </div>
+              </div>
             </div>
-            <p className="mt-3 text-2xl font-semibold tracking-tight">
-              {summary.regretCount}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {formatCurrency(summary.regretAmount, summary.currency)} •{" "}
-              {summary.regretExpenseShare}% от всех расходов
-            </p>
-          </div>
 
-          <div className="rounded-2xl border bg-card/60 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-muted-foreground">
+            <div className="px-6 py-[18px]">
+              <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.8px] text-[#AAA49C]">
                 Операции с эмоцией
-              </span>
-              <Brain className="h-4 w-4 text-accent" />
+              </p>
+              <div className="mb-1 flex items-baseline gap-2.5">
+                <span className="font-mono text-4xl font-bold leading-none tracking-[-2px] text-[#111]">
+                  {summary.totalTransactionsWithEmotion}
+                </span>
+              </div>
+              <p className="text-[11px] text-[#C0BCB4]">
+                Из них стрессовых: {" "}
+                <strong className="font-mono font-medium text-[#888]">
+                  {summary.stressCount}
+                </strong>
+              </p>
             </div>
-            <p className="mt-3 text-2xl font-semibold tracking-tight">
-              {summary.totalTransactionsWithEmotion}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Стрессовых операций: {summary.stressCount}
-            </p>
           </div>
-        </div>
 
-        <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="rounded-2xl border bg-muted/20 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium">Распределение эмоций</p>
-                <p className="text-xs text-muted-foreground">
-                  По операциям, где пользователь явно выбрал состояние.
+          <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr]">
+            <div className="border-b border-[#EDEAE4] px-6 py-5 lg:border-r lg:border-b-0">
+              <p className="mb-[18px] text-[11px] font-semibold uppercase tracking-[0.5px] text-[#AAA49C]">
+                Распределение эмоций
+              </p>
+
+              {summary.emotionDistribution.length === 0 ? (
+                <p className="text-sm text-[#AAA49C]">
+                  Пока нет операций с эмоцией.
                 </p>
-              </div>
-              <Gauge className="h-4 w-4 text-accent" />
+              ) : (
+                <div>
+                  {summary.emotionDistribution.map((item) => {
+                    const meta = getTransactionEmotionMeta(item.emotion);
+                    const widthRatio =
+                      maxEmotionCount > 0 ? item.count / maxEmotionCount : 0;
+                    const widthPercent =
+                      item.count > 0 ? Math.max(widthRatio * 90, 8) : 0;
+
+                    return (
+                      <div
+                        key={item.emotion}
+                        className="flex items-center border-b border-[#F4F2EE] py-[9px] last:border-b-0"
+                      >
+                        <div className="w-[130px] flex-shrink-0">
+                          <div className="flex items-center gap-[7px]">
+                            <span className="text-sm leading-none">
+                              {meta.emoji}
+                            </span>
+                            <span className="text-xs font-medium text-[#333]">
+                              {meta.shortLabel}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mx-[14px] h-1 flex-1 overflow-hidden rounded-sm bg-[#F0EEE9]">
+                          <div
+                            className="h-full rounded-sm transition-[width] duration-500 ease-out"
+                            style={{
+                              width: `${widthPercent}%`,
+                              backgroundColor: emotionBarColorMap[item.emotion],
+                            }}
+                          />
+                        </div>
+                        <span className="w-6 flex-shrink-0 text-right font-mono text-[13px] font-semibold text-[#333]">
+                          {item.count}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            {summary.emotionDistribution.length === 0 ? (
-              <p className="mt-4 text-sm text-muted-foreground">
-                Пока нет операций с эмоцией.
+            <div className="flex flex-col px-[22px] py-5">
+              <p className="mb-[18px] text-[11px] font-semibold uppercase tracking-[0.5px] text-[#AAA49C]">
+                Топ категорий · импульсивно
               </p>
-            ) : (
-              <div className="mt-4 space-y-3">
-                {summary.emotionDistribution.map((item) => {
-                  const meta = getTransactionEmotionMeta(item.emotion);
-                  const width = total > 0 ? (item.count / total) * 100 : 0;
 
-                  return (
-                    <div key={item.emotion} className="space-y-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <EmotionBadge emotion={item.emotion} />
-                        <span className="text-sm font-medium">{item.count}</span>
+              {summary.topEmotionCategories.length === 0 ? (
+                <p className="text-sm text-[#AAA49C]">
+                  Пока недостаточно данных.
+                </p>
+              ) : (
+                <div>
+                  {summary.topEmotionCategories.map((item) => {
+                    const meta = getTransactionEmotionMeta(item.emotion);
+
+                    return (
+                      <div
+                        key={item.categoryId}
+                        className="flex items-start justify-between gap-3 border-b border-[#F4F2EE] py-[11px] last:border-b-0"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-[13px] font-semibold text-[#111]">
+                            {item.categoryName}
+                          </p>
+                          <p className="text-[10px] text-[#C0BCB4]">
+                            {item.count} {formatOperationWord(item.count)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono text-[13px] font-semibold text-[#111]">
+                            {formatCurrency(item.amount, summary.currency)}
+                          </p>
+                          <span
+                            className={`mt-1 inline-flex items-center gap-[3px] rounded-full border px-[7px] py-[2px] text-[9px] font-semibold tracking-[0.3px] ${emotionTagClassMap[item.emotion]}`}
+                          >
+                            <span>{meta.emoji}</span>
+                            <span>{meta.shortLabel}</span>
+                          </span>
+                        </div>
                       </div>
-                      <div className="h-2 rounded-full bg-muted">
-                        <div
-                          className={cn(
-                            "h-full rounded-full",
-                            meta.badgeClassName,
-                          )}
-                          style={{ width: `${width}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="rounded-2xl border bg-muted/20 p-4">
-            <p className="text-sm font-medium">Топ категорий импульсивных трат</p>
-            <p className="text-xs text-muted-foreground">
-              Категории, где импульсивные покупки встречаются чаще всего.
+          {summary.fxUnavailable ? (
+            <p className="border-t border-[#EDEAE4] px-6 py-3 text-xs text-[#AAA49C]">
+              FX недоступен: суммы показаны без полной конвертации.
             </p>
-
-            {summary.topEmotionCategories.length === 0 ? (
-              <p className="mt-4 text-sm text-muted-foreground">
-                Пока недостаточно данных.
-              </p>
-            ) : (
-              <div className="mt-4 space-y-3">
-                {summary.topEmotionCategories.map((item) => (
-                  <div
-                    key={item.categoryId}
-                    className="flex items-center justify-between gap-3 rounded-xl border bg-background/70 px-3 py-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {item.categoryName}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.count} операций
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">
-                        {formatCurrency(item.amount, summary.currency)}
-                      </p>
-                      <EmotionBadge emotion={item.emotion} className="mt-1" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          ) : summary.fxStale ? (
+            <p className="border-t border-[#EDEAE4] px-6 py-3 text-xs text-[#AAA49C]">
+              Используются последние сохранённые курсы. Данные могут быть не
+              актуальны.
+            </p>
+          ) : null}
         </div>
-
-        {summary.fxUnavailable ? (
-          <p className="text-xs text-muted-foreground">
-            FX недоступен: суммы показаны без полной конвертации.
-          </p>
-        ) : summary.fxStale ? (
-          <p className="text-xs text-muted-foreground">
-            Используются последние сохранённые курсы. Данные могут быть не
-            актуальны.
-          </p>
-        ) : null}
       </CardContent>
     </Card>
   );

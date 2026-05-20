@@ -15,28 +15,26 @@ type Props = {
 export function IconPicker({ items, value, onChange, color = "slate" }: Props) {
   const iconColor = getCategoryColor(color);
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+    <div className="flex flex-wrap items-center gap-1">
       {items.map((item) => {
         const Icon = getCategoryIcon(item.key);
+        const isSelected = value === item.key;
 
         return (
           <button
             key={item.key}
             type="button"
             onClick={() => onChange(item.key)}
-            style={{
-              padding: 8,
-              border: value === item.key ? "2px solid black" : "1px solid #ccc",
-              borderRadius: 8,
-              cursor: "pointer",
-              background: "white",
-            }}
+            className={
+              isSelected
+                ? "flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-[#111] bg-[#111] transition-colors"
+                : "flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-[#EDEAE4] bg-[#FAFAF8] transition-colors hover:border-[#DDD9D1] hover:bg-[#F0EEE9]"
+            }
+            aria-label={item.label}
           >
             <Icon
-              style={{
-                color: iconColor,
-              }}
-              size={20}
+              style={{ color: isSelected ? "#fff" : iconColor }}
+              size={15}
             />
           </button>
         );

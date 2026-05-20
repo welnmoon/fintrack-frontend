@@ -29,11 +29,6 @@ function resolveCategoryColor(colorKey: string | null): string {
   }
 }
 
-function resolveCategoryIcon(iconKey: string | null): LucideIcon | null {
-  if (!iconKey) return null;
-  return getCategoryIcon(iconKey as CategoryIconKey) ?? null;
-}
-
 function makeIconLabel(getIcon: (key: CategoryIconKey) => LucideIcon) {
   return function IconLabel(props: PieLabelRenderProps) {
     const { cx, cy, midAngle, innerRadius, outerRadius, percent, payload } =
@@ -90,80 +85,77 @@ export default function PieChartWithCustomizedLabel({
 
   if (!data.length || total <= 0) {
     return (
-      <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-full w-full items-center justify-center text-sm text-[#AAA49C]">
         Нет данных по расходам за выбранный период
       </div>
     );
   }
 
   return (
-    <div
-      className="flex h-full min-h-0 flex-col gap-4 lg:flex-row"
-      style={{ width: "100%", maxWidth: 700, alignItems: "stretch" }}
-    >
-      <div className="h-52 shrink-0 lg:h-full" style={{ flex: "0 0 320px" }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart className="h-full">
-            <Pie
-              data={data}
-              dataKey="amount"
-              nameKey="name"
-              labelLine={false}
-              label={makeIconLabel(getCategoryIcon)}
-              isAnimationActive={isAnimationActive}
-            >
-              {data.map((i) => (
-                <Cell key={i.id} fill={resolveCategoryColor(i.colorKey)} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+    <div className="flex h-full min-h-0 flex-col lg:flex-row">
+      <div className="flex shrink-0 items-center justify-center px-6 py-5 lg:w-[220px]">
+        <div className="relative h-[170px] w-[170px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart className="h-full">
+              <Pie
+                data={data}
+                dataKey="amount"
+                nameKey="name"
+                innerRadius={44}
+                outerRadius={72}
+                labelLine={false}
+                label={makeIconLabel(getCategoryIcon)}
+                isAnimationActive={isAnimationActive}
+              >
+                {data.map((i) => (
+                  <Cell key={i.id} fill={resolveCategoryColor(i.colorKey)} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span className="font-mono text-xs font-semibold text-[#111]">
+              {new Intl.NumberFormat("ru-RU", {
+                maximumFractionDigits: 0,
+              }).format(total)}
+            </span>
+            <span className="mt-0.5 text-[9px] text-[#C0BCB4]">расходы · ₸</span>
+          </div>
+        </div>
       </div>
 
-      <div className="min-w-0 flex-1 overflow-y-auto pr-1">
-        <ul className="space-y-3">
+      <div className="min-h-0 min-w-0 flex-1 border-l border-[#EDEAE4]">
+        <ul>
           {data.map((i) => {
             const percent = total > 0 ? (i.amount / total) * 100 : 0;
             const color = resolveCategoryColor(i.colorKey);
-            const Icon = resolveCategoryIcon(i.iconKey);
 
             return (
               <li
                 key={i.id}
-                className="flex items-start gap-3 rounded-2xl border bg-background/80 px-4 py-3"
+                className="flex items-center gap-3 border-b border-[#F4F2EE] px-[18px] py-[13px] last:border-b-0 hover:bg-[#FAFAF8]"
               >
-                <div
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border"
-                  style={{
-                    borderColor: `${color}33`,
-                    backgroundColor: `${color}14`,
-                  }}
-                >
-                  {Icon ? <Icon size={18} color={color} /> : null}
-                </div>
+                <span
+                  aria-hidden
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ background: color }}
+                />
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      aria-hidden
-                      className="shrink-0 rounded-full"
-                      style={{
-                        width: 10,
-                        height: 10,
-                        background: color,
-                      }}
-                    />
-                    <span className="truncate font-medium">{i.name}</span>
-                  </div>
-
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                    <span className="font-semibold text-foreground">
-                      {formatCurrency(i.amount, currency)}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {percent.toFixed(0)}% от всех расходов
-                    </span>
-                  </div>
+                  <p className="truncate text-xs font-semibold text-[#222]">
+                    {i.name}
+                  </p>
+                  <p className="text-[10px] text-[#C0BCB4]">
+                    {percent.toFixed(0)}% от всех расходов
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-mono text-xs font-semibold text-[#111]">
+                    {formatCurrency(i.amount, currency)}
+                  </p>
+                  <p className="font-mono text-[10px] text-[#C0BCB4]">
+                    {percent.toFixed(0)}%
+                  </p>
                 </div>
               </li>
             );

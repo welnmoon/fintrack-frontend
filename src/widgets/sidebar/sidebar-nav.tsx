@@ -9,7 +9,6 @@ import {
   Tags,
   TrendingDown,
   TrendingUp,
-  UserRound,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { ROUTES } from "@/shared/config";
@@ -32,7 +31,6 @@ const navItems: NavItem[] = [
   { label: "Категории", to: ROUTES.categories, icon: Tags },
   { label: "Переводы", to: ROUTES.transfers, icon: ArrowLeftRight },
   { label: "Отчеты", to: ROUTES.reports, icon: BarChart3 },
-  { label: "Профиль", to: ROUTES.profile, icon: UserRound },
   { label: "Настройки", to: ROUTES.settings, icon: Settings },
 ];
 

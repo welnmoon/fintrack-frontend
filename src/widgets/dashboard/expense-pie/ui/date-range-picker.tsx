@@ -1,5 +1,6 @@
 import { CalendarIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
+import { cn } from "@/shared/lib";
 import {
   Button,
   Calendar,
@@ -11,6 +12,7 @@ import {
 type Props = {
   value?: DateRange;
   onChange: (range: DateRange | undefined) => void;
+  buttonClassName?: string;
 };
 
 function formatDate(date: Date | undefined) {
@@ -22,7 +24,7 @@ function formatDate(date: Date | undefined) {
   }).format(date);
 }
 
-export function DateRangePicker({ value, onChange }: Props) {
+export function DateRangePicker({ value, onChange, buttonClassName }: Props) {
   const label =
     value?.from && value?.to
       ? `${formatDate(value.from)} - ${formatDate(value.to)}`
@@ -33,8 +35,14 @@ export function DateRangePicker({ value, onChange }: Props) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="w-[250px] justify-start text-left font-normal">
-          <CalendarIcon className="h-4 w-4" />
+        <Button
+          variant="outline"
+          className={cn(
+            "h-8 justify-start rounded-[8px] border-[#DDD9D1] bg-[#F7F6F3] px-3 text-left font-mono text-[11px] font-medium text-[#555] hover:bg-[#F1EFEB]",
+            buttonClassName,
+          )}
+        >
+          <CalendarIcon className="h-3.5 w-3.5 text-[#AAA49C]" />
           <span>{label}</span>
         </Button>
       </PopoverTrigger>

@@ -16,6 +16,7 @@ import { UpdateCategorySheet } from "./update-category-sheet";
 type CategoryActionsMenuProps = {
   category: UserCategory;
   transactionsCount: number;
+  triggerClassName?: string;
 };
 
 function getRequestErrorMessage(error: unknown) {
@@ -47,6 +48,7 @@ function getRequestErrorMessage(error: unknown) {
 export function CategoryActionsMenu({
   category,
   transactionsCount,
+  triggerClassName,
 }: CategoryActionsMenuProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const { mutate: deleteCategory, isPending: isDeletePending } =
@@ -81,7 +83,7 @@ export function CategoryActionsMenu({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-9 w-9 rounded-full"
+            className={triggerClassName ?? "h-9 w-9 rounded-full"}
           >
             <MoreHorizontal className="h-4 w-4" />
             <span className="sr-only">Действия с категорией</span>

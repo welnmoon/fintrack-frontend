@@ -9,7 +9,6 @@ import { IncomePage } from "@/pages/income";
 import { LandingPage } from "@/pages/landing";
 import { LoginPage } from "@/pages/login";
 import { NotFoundPage } from "@/pages/not-found";
-import { ProfilePage } from "@/pages/profile";
 import { ReportsPage } from "@/pages/reports";
 import { SettingsPage } from "@/pages/settings";
 import { TransfersPage } from "@/pages/transfers";
@@ -76,7 +75,7 @@ export const appRouter = createBrowserRouter([
       },
       {
         path: toChildPath(ROUTES.profile),
-        element: <ProfilePage />,
+        element: <SettingsPage />,
       },
       {
         path: toChildPath(ROUTES.settings),

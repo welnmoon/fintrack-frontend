@@ -7,13 +7,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useBalanceHistory } from "@/features/get-dashboard/api/use-balance-history";
 import type {
   BalanceHistoryInterval,
   DashboardBalanceHistoryPoint,
 } from "@/features/get-dashboard/model/types.api";
-import { formatCurrency } from "@/shared/lib";
+import { cn, formatCurrency } from "@/shared/lib";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui";
 import { HashLoader } from "react-spinners";
 
@@ -112,16 +112,14 @@ const BalanceHistory = () => {
   const [interval, setInterval] = useState<BalanceHistoryInterval>("day");
   const { data, isLoading, isError } = useBalanceHistory(interval);
 
-  const chartData = useMemo(() => {
-    if (!data?.points) return [];
-
-    return data.points.map((point) => ({
-      label: formatAxisLabel(point, interval),
-      periodStart: point.periodStart,
-      periodEnd: point.periodEnd,
-      total: point.total,
-    }));
-  }, [data?.points, interval]);
+  const chartData = data?.points
+    ? data.points.map((point) => ({
+        label: formatAxisLabel(point, interval),
+        periodStart: point.periodStart,
+        periodEnd: point.periodEnd,
+        total: point.total,
+      }))
+    : [];
 
   const hasNumericPoints = chartData.some(
     (point) => typeof point.total === "number",
@@ -232,33 +230,44 @@ const BalanceHistory = () => {
     <Tabs
       value={interval}
       onValueChange={(value) => setInterval(value as BalanceHistoryInterval)}
-      className="h-full w-full"
+      className="h-full w-full gap-0"
     >
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <TabsList className="grid w-fit grid-cols-3">
+      <div className="flex items-center justify-between gap-3 border-b border-[#EDEAE4] px-6 py-3">
+        <TabsList className="h-auto rounded-none bg-transparent p-0">
           {(Object.keys(intervalLabel) as BalanceHistoryInterval[]).map(
-            (item) => (
-              <TabsTrigger key={item} value={item}>
+            (item, index, list) => (
+              <TabsTrigger
+                key={item}
+                value={item}
+                className={cn(
+                  "h-7 rounded-none border border-[#DDD9D1] bg-transparent px-3.5 font-mono text-[10px] font-medium tracking-[0.5px] text-[#AAA49C]",
+                  "data-[state=active]:border-[#111] data-[state=active]:bg-[#111] data-[state=active]:text-white data-[state=active]:shadow-none",
+                  index === 0 && "rounded-l-[6px]",
+                  index === list.length - 1
+                    ? "rounded-r-[6px]"
+                    : "border-r-0",
+                )}
+              >
                 {intervalLabel[item]}
               </TabsTrigger>
             ),
           )}
         </TabsList>
 
-        <div className="text-xs text-muted-foreground">
-          Валюта: {data?.currency ?? "KZT"}
+        <div className="font-mono text-[10px] tracking-[0.5px] text-[#C0BCB4]">
+          {data?.currency ?? "KZT"}
         </div>
       </div>
 
-      <div className="h-[calc(100%-2.75rem)] min-h-0">{renderContent()}</div>
+      <div className="min-h-0 flex-1 px-3 pb-3 pt-3">{renderContent()}</div>
 
       {data?.fxUnavailable ? (
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="border-t border-[#EDEAE4] px-6 py-2.5 text-xs text-[#AAA49C]">
           FX недоступен. График показан в fallback-режиме без полной конвертации
           валют.
         </p>
       ) : data?.fxStale ? (
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="border-t border-[#EDEAE4] px-6 py-2.5 text-xs text-[#AAA49C]">
           Используются последние сохраненные курсы FX. Данные могут быть не
           актуальны.
         </p>

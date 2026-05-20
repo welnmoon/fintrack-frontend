@@ -40,27 +40,34 @@ export function IncomePage() {
       />
 
       <Card>
-        <CardContent className="pt-6">
-          <div className="grid gap-3 md:grid-cols-4">
-            <Input placeholder="Поиск по описанию" />
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Источник дохода" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все источники</SelectItem>
-                <SelectItem value="salary">Зарплата</SelectItem>
-                <SelectItem value="freelance">Фриланс</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input type="date" />
-            <Input type="date" />
+        <CardContent className="p-0">
+          <div className="border-b border-[#EDEAE4] px-6 py-3">
+            <p className="font-mono text-[9px] uppercase tracking-[1.8px] text-[#C0BCB4]">
+              Фильтры
+            </p>
+          </div>
+          <div className="px-6 py-4">
+            <div className="grid gap-3 md:grid-cols-4">
+              <Input placeholder="Поиск по описанию" />
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Источник дохода" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Все источники</SelectItem>
+                  <SelectItem value="salary">Зарплата</SelectItem>
+                  <SelectItem value="freelance">Фриланс</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input type="date" />
+              <Input type="date" />
+            </div>
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="p-6">
           <TransactionFeed
             transactions={transactions}
             accountById={accountById}

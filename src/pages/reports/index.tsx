@@ -10,11 +10,13 @@ export function ReportsPage() {
       />
 
       <Card>
-        <CardHeader>
-          <CardTitle>Отчеты по финансам</CardTitle>
+        <CardHeader className="border-b border-[#EDEAE4]">
+          <CardTitle className="text-[15px] font-semibold tracking-[-0.2px] text-[#111]">
+            Отчеты по финансам
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
+        <CardContent className="p-6">
+          <p className="text-sm text-[#AAA49C]">
             Здесь будут сводные отчеты по доходам, расходам и балансу за
             выбранный период.
           </p>

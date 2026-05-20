@@ -63,6 +63,15 @@ const INTERVAL_OPTIONS: ForexInterval[] = [
   "1day",
 ];
 
+const INTERVAL_LABEL_SHORT: Record<ForexInterval, string> = {
+  "1min": "1m",
+  "5min": "5m",
+  "15min": "15m",
+  "1h": "1h",
+  "4h": "4h",
+  "1day": "1д",
+};
+
 const CHART_TYPE_OPTIONS: Array<{
   value: ForexChartType;
   label: string;
@@ -79,6 +88,7 @@ type Props = {
   showExtendedMeta?: boolean;
   chartViewportClassName?: string;
   className?: string;
+  variant?: "default" | "dashboard";
 };
 
 type Status = "connecting" | "live" | "stale" | "error";
@@ -160,6 +170,7 @@ export default function PriceChart({
   showExtendedMeta = false,
   chartViewportClassName,
   className,
+  variant = "default",
 }: Props) {
   const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -389,6 +400,140 @@ export default function PriceChart({
     }
   }, [areaData, candlestickData, selectedChartType]);
 
+  const chartViewport = (
+    <div
+      ref={containerRef}
+      className={cn(
+        "w-full rounded-xl",
+        chartViewportClassName ?? "h-[320px] sm:h-[360px]",
+      )}
+    />
+  );
+
+  if (variant === "dashboard") {
+    return (
+      <div className={cn("w-full", className)}>
+        <div className="flex flex-col gap-3 border-b border-[#EDEAE4] px-6 py-2.5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center">
+              {FOREX_SYMBOL_OPTIONS.map((item, index) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => {
+                    if (item === selectedSymbol) return;
+                    resetStreamState();
+                    setSelectedSymbol(item);
+                  }}
+                  className={cn(
+                    "h-7 border border-[#DDD9D1] px-3 font-mono text-[11px] font-medium tracking-[0.3px] text-[#AAA49C] transition-colors",
+                    index === 0 && "rounded-l-[7px]",
+                    index === FOREX_SYMBOL_OPTIONS.length - 1
+                      ? "rounded-r-[7px]"
+                      : "border-r-0",
+                    selectedSymbol === item &&
+                      "border-[#111] bg-[#111] text-white",
+                  )}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+
+            <div className="h-5 w-px bg-[#EDEAE4]" />
+
+            <div className="flex flex-wrap gap-1">
+              {INTERVAL_OPTIONS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => {
+                    if (item === selectedInterval) return;
+                    resetStreamState();
+                    setSelectedInterval(item);
+                  }}
+                  className={cn(
+                    "h-6 rounded-[5px] px-2.5 font-mono text-[10px] font-medium text-[#B5B0A8] transition-colors hover:bg-[#F4F2EE] hover:text-[#555]",
+                    selectedInterval === item &&
+                      "bg-[#F0EEE9] font-semibold text-[#333]",
+                  )}
+                >
+                  {INTERVAL_LABEL_SHORT[item]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-[10px] tracking-[0.3px] text-[#AAA49C]">
+              {meta?.symbol ?? selectedSymbol} ·{" "}
+              {INTERVAL_LABEL_SHORT[meta?.interval ?? selectedInterval]}
+            </span>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2 py-[3px] text-[10px] font-semibold",
+                status === "live"
+                  ? "border-[#C2EDD8] bg-[#EDFAF4] text-[#1A9E6A]"
+                  : status === "stale"
+                    ? "border-[#F3D9A0] bg-[#FEF5E6] text-[#C07C1A]"
+                    : "border-[#DDD9D1] bg-[#F7F6F3] text-[#888]",
+              )}
+            >
+              <span
+                className={cn(
+                  "h-[5px] w-[5px] rounded-full",
+                  status === "live" ? "bg-[#1A9E6A] animate-pulse" : "bg-[#AAA49C]",
+                )}
+              />
+              {getStatusLabel(status)}
+            </span>
+            <span className="rounded-md border border-[#DDD9D1] bg-[#F7F6F3] px-2.5 py-[3px] font-mono text-[11px] font-semibold text-[#111]">
+              {meta?.lastPrice ? meta.lastPrice.toFixed(3) : "—"}
+            </span>
+          </div>
+        </div>
+
+        <div className="h-[280px] border-b border-[#EDEAE4] bg-[#FAFAF8] p-2.5 sm:p-3">
+          {chartViewport}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2">
+          <div className="border-b border-[#EDEAE4] px-6 py-3 sm:border-r sm:border-b-0">
+            <p className="mb-1 font-mono text-[9px] uppercase tracking-[2px] text-[#C0BCB4]">
+              Обновлено
+            </p>
+            <p className="font-mono text-[13px] font-semibold text-[#333]">
+              {meta?.updatedAt
+                ? new Date(meta.updatedAt).toLocaleTimeString("ru-RU")
+                : "Ожидание данных"}
+            </p>
+          </div>
+          <div className="px-6 py-3">
+            <p className="mb-1 font-mono text-[9px] uppercase tracking-[2px] text-[#C0BCB4]">
+              История
+            </p>
+            <p
+              className={cn(
+                "font-mono text-[13px] font-semibold",
+                meta?.backfillCompleted ? "text-[#1A9E6A]" : "text-[#333]",
+              )}
+            >
+              {meta?.backfillCompleted ? "Синхронизирована" : "Догружается"}
+            </p>
+          </div>
+        </div>
+
+        {(status === "stale" || streamError || meta?.lastErrorMessage) && (
+          <p className="border-t border-[#EDEAE4] px-6 py-2.5 text-xs text-amber-600">
+            {streamError ??
+              meta?.lastErrorMessage ??
+              "Источник котировок недоступен, данные временно заморожены"}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={cn("w-full space-y-4", className)}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -464,13 +609,7 @@ export default function PriceChart({
       </div>
 
       <div className="rounded-2xl border bg-card/60 p-3 sm:p-4">
-        <div
-          ref={containerRef}
-          className={cn(
-            "w-full rounded-xl",
-            chartViewportClassName ?? "h-[320px] sm:h-[360px]",
-          )}
-        />
+        {chartViewport}
       </div>
 
       <div

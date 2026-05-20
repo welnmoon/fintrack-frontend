@@ -1,12 +1,21 @@
 import { APP_THEMES, useTheme } from "@/app/providers";
+import { useGetUser } from "@/entities/user/api/use-get-user";
+import { useLogout } from "@/features/auth-login/api/use-logout";
+import LoginForm from "@/features/auth-login/ui/login-form";
+import UpdateUserCurrencyForm from "@/features/update-user/ui/update-user-currency";
+import UpdateUserForm from "@/features/update-user/ui/update-user";
 import { cn } from "@/shared/lib";
 import {
+  Avatar,
+  AvatarFallback,
   Badge,
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  Separator,
   Switch,
   Tabs,
   TabsContent,
@@ -15,73 +24,136 @@ import {
 } from "@/shared/ui";
 import { PageContainer, PageHeader } from "@/widgets/page-shell";
 import {
-  BellRing,
   Check,
   Layers3,
   MoonStar,
   Palette,
-  PlugZap,
-  ShieldCheck,
   Sparkles,
   SunMedium,
 } from "lucide-react";
+import { HashLoader } from "react-spinners";
 
 const appearanceLabelMap = {
   light: "Light",
   dark: "Dark",
 } as const;
 
-const placeholderCards = [
-  {
-    value: "notifications",
-    label: "Уведомления",
-    icon: BellRing,
-    title: "Уведомления",
-    description: "Настройки уведомлений появятся здесь позже.",
-  },
-  {
-    value: "security",
-    label: "Безопасность",
-    icon: ShieldCheck,
-    title: "Безопасность",
-    description: "2FA, сессии и управление устройствами будут добавлены позже.",
-  },
-  {
-    value: "integrations",
-    label: "Интеграции",
-    icon: PlugZap,
-    title: "Интеграции",
-    description: "Подключения банков, экспорты и синхронизация появятся позже.",
-  },
-] as const;
-
 export function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const activeTheme =
     APP_THEMES.find((item) => item.id === theme) ?? APP_THEMES[0];
 
+  const {
+    data: user,
+    isLoading: isUserLoading,
+    isError: isUserError,
+    error: userError,
+  } = useGetUser();
+  const {
+    mutate: logoutMutate,
+    isPending: logoutIsPending,
+    isError: logoutIsError,
+    error: logoutError,
+  } = useLogout();
+
+  const displayName = [user?.firstName, user?.lastName]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <PageContainer>
       <PageHeader
         title="Настройки"
-        description="Локальные настройки интерфейса, сохранённые на этом устройстве."
+        description="Профиль пользователя и локальные параметры интерфейса."
       />
 
-      <Tabs defaultValue="interface" className="space-y-4">
+      <Tabs defaultValue="profile" className="space-y-4">
         <TabsList className="flex h-auto flex-wrap gap-2 rounded-2xl bg-transparent p-0">
+          <TabsTrigger value="profile">Профиль</TabsTrigger>
           <TabsTrigger value="interface">Интерфейс</TabsTrigger>
           <TabsTrigger value="general">Общие</TabsTrigger>
-          {placeholderCards.map((item) => (
-            <TabsTrigger key={item.value} value={item.value}>
-              {item.label}
-            </TabsTrigger>
-          ))}
         </TabsList>
+
+        <TabsContent value="profile">
+          <Card className="max-w-2xl">
+            <CardHeader className="border-b border-[#EDEAE4]">
+              <CardTitle className="text-[15px] font-semibold tracking-[-0.2px] text-[#111]">
+                Профиль пользователя
+              </CardTitle>
+              <CardDescription>
+                Личные данные и настройки аккаунта.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-6">
+              {isUserLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <HashLoader size={30} color="hsl(var(--foreground))" />
+                </div>
+              ) : isUserError ? (
+                <p className="text-sm text-destructive">
+                  Ошибка при загрузке данных пользователя: {" "}
+                  {userError instanceof Error
+                    ? userError.message
+                    : "Неизвестная ошибка"}
+                </p>
+              ) : !user ? (
+                <LoginForm />
+              ) : (
+                <>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-14 w-14 border border-[#DDD9D1]">
+                      <AvatarFallback className="text-lg">
+                        {displayName ? displayName.charAt(0).toUpperCase() : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-lg font-semibold">{displayName}</p>
+                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Валюта по умолчанию
+                    </span>
+                    <Badge>{user.defaultCurrency ?? "KZT"}</Badge>
+                  </div>
+
+                  <UpdateUserCurrencyForm user={user} />
+
+                  <Separator />
+
+                  <UpdateUserForm user={user} />
+
+                  <Separator />
+
+                  <Button
+                    disabled={logoutIsPending}
+                    onClick={() => logoutMutate()}
+                    variant="destructive"
+                  >
+                    {logoutIsPending ? "..." : "Выйти"}
+                  </Button>
+
+                  {logoutIsError ? (
+                    <p className="text-sm text-destructive">
+                      {logoutError instanceof Error
+                        ? logoutError.message
+                        : "Ошибка выхода"}
+                    </p>
+                  ) : null}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="interface" className="space-y-4">
           <div className="grid gap-4 xl:grid-cols-[1.45fr_0.85fr]">
             <Card>
-              <CardHeader className="space-y-3">
+              <CardHeader className="space-y-3 border-b border-[#EDEAE4]">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Palette className="h-4 w-4" />
                   <span className="text-sm font-medium">Оформление</span>
@@ -104,7 +176,7 @@ export function SettingsPage() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 p-6">
                 <div className="rounded-2xl border bg-muted/20 p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -204,10 +276,10 @@ export function SettingsPage() {
 
             <div className="space-y-4">
               <Card>
-                <CardHeader>
+                <CardHeader className="border-b border-[#EDEAE4]">
                   <CardTitle>Подсказка</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <CardContent className="space-y-3 p-6 text-sm text-muted-foreground">
                   <div className="flex items-start gap-2">
                     <Sparkles className="mt-0.5 h-4 w-4 text-primary" />
                     <p>
@@ -230,7 +302,7 @@ export function SettingsPage() {
 
         <TabsContent value="general">
           <Card>
-            <CardHeader>
+            <CardHeader className="border-b border-[#EDEAE4]">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Layers3 className="h-4 w-4" />
                 <span className="text-sm font-medium">Общее поведение</span>
@@ -240,7 +312,7 @@ export function SettingsPage() {
                 Базовые настройки интерфейса без привязки к серверу.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="font-medium">Компактный режим</p>
@@ -253,31 +325,6 @@ export function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        {placeholderCards.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <TabsContent key={item.value} value={item.value}>
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Icon className="h-4 w-4" />
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </div>
-                  <CardTitle>{item.title}</CardTitle>
-                  <CardDescription>{item.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-2xl border border-dashed bg-muted/20 p-5 text-sm text-muted-foreground">
-                    Раздел пока пустой. Здесь появятся реальные настройки в
-                    следующих итерациях.
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          );
-        })}
       </Tabs>
     </PageContainer>
   );
