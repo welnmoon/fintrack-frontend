@@ -1,7 +1,8 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { Link } from "react-router-dom";
-import { RotateCw } from "lucide-react";
+import { AlertTriangle, Info, RotateCw, TrendingUp } from "lucide-react";
+import type { FinancialInsight } from "@/features/get-dashboard/model/types.api";
 import { getTransactionEmotionMeta } from "@/entities/transaction";
 import { formatCurrency, formatDate } from "@/shared/lib";
 import { useGetDashboard } from "@/features/get-dashboard/api/use-get-dashboard";
@@ -23,6 +24,122 @@ import BalanceHistory from "@/widgets/dashboard/balance-history/ui/balance-histo
 import PriceChart from "@/widgets/dashboard/forex-chart/ui/forex-chart";
 import { DateRangePicker } from "@/widgets/dashboard/expense-pie/ui/date-range-picker";
 import { EmotionSummaryCard } from "@/widgets/dashboard/emotion-summary/ui/emotion-summary-card";
+
+const insightMeta: Record<
+  FinancialInsight["type"],
+  {
+    Icon: React.ElementType;
+    iconBg: string;
+    iconColor: string;
+    badgeBorder: string;
+    badgeBg: string;
+    badgeText: string;
+    label: string;
+    accentBar: string;
+  }
+> = {
+  warning: {
+    Icon: AlertTriangle,
+    iconBg: "bg-[#FEF5E6]",
+    iconColor: "text-[#C07C1A]",
+    badgeBorder: "border-[#F3D9A0]",
+    badgeBg: "bg-[#FEF5E6]",
+    badgeText: "text-[#C07C1A]",
+    label: "внимание",
+    accentBar: "bg-[#E8A020]",
+  },
+  positive: {
+    Icon: TrendingUp,
+    iconBg: "bg-[#EDFAF4]",
+    iconColor: "text-[#1A9E6A]",
+    badgeBorder: "border-[#C2EDD8]",
+    badgeBg: "bg-[#EDFAF4]",
+    badgeText: "text-[#1A9E6A]",
+    label: "хорошо",
+    accentBar: "bg-[#1A9E6A]",
+  },
+  info: {
+    Icon: Info,
+    iconBg: "bg-[#F0F4FF]",
+    iconColor: "text-[#2A4490]",
+    badgeBorder: "border-[#C0CCF0]",
+    badgeBg: "bg-[#F0F4FF]",
+    badgeText: "text-[#2A4490]",
+    label: "инфо",
+    accentBar: "bg-[#2A4490]",
+  },
+};
+
+function FinancialInsightsBlock({
+  insights,
+  isLoading,
+}: {
+  insights?: FinancialInsight[];
+  isLoading?: boolean;
+}) {
+  return (
+    <div className="overflow-hidden rounded-[14px] border border-[#DDD9D1] bg-white">
+      <div className="flex flex-wrap items-baseline gap-3 border-b border-[#EDEAE4] px-6 py-4">
+        <span className="text-[15px] font-semibold tracking-[-0.2px] text-[#111]">
+          Финансовые инсайты
+        </span>
+        <span className="text-xs text-[#B5B0A8]">
+          Короткие выводы на основе расходов, прогноза и эмоциональных меток
+        </span>
+      </div>
+
+      {isLoading ? (
+        <div className="divide-y divide-[#F4F2EE]">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-start gap-4 px-6 py-4">
+              <Skeleton className="h-8 w-8 flex-shrink-0 rounded-lg" />
+              <div className="flex-1 space-y-2 pt-0.5">
+                <Skeleton className="h-3.5 w-40" />
+                <Skeleton className="h-3 w-72" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : !insights?.length ? null : (
+        <div className="divide-y divide-[#F4F2EE]">
+          {insights.map((insight, index) => {
+            const meta = insightMeta[insight.type];
+            return (
+              <div
+                key={index}
+                className="flex items-start gap-4 px-6 py-4 transition-colors hover:bg-[#FAFAF8]"
+              >
+                <div className="relative flex-shrink-0">
+                  <div
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl ${meta.iconBg}`}
+                  >
+                    <meta.Icon className={`h-4 w-4 ${meta.iconColor}`} />
+                  </div>
+                  <span
+                    className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white ${meta.accentBar}`}
+                  />
+                </div>
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <p className="text-[13px] font-semibold leading-snug text-[#111]">
+                    {insight.title}
+                  </p>
+                  <p className="mt-0.5 text-[12px] leading-[1.5] text-[#888]">
+                    {insight.description}
+                  </p>
+                </div>
+                <span
+                  className={`mt-0.5 flex-shrink-0 rounded-full border px-[9px] py-[3px] font-mono text-[9px] font-semibold uppercase tracking-[0.5px] ${meta.badgeBorder} ${meta.badgeBg} ${meta.badgeText}`}
+                >
+                  {meta.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function DashboardHomePage() {
   const [pendingExpensePieRange, setPendingExpensePieRange] = useState<
@@ -77,9 +194,6 @@ export function DashboardHomePage() {
   const forecastConfidence = forecast
     ? forecastConfidenceMap[forecast.confidence]
     : null;
-  const projectedDelta = forecast
-    ? forecast.projectedEndBalance - forecast.currentBalance
-    : 0;
   const formattedLongDate = (value: string | Date) =>
     new Intl.DateTimeFormat("ru-RU", {
       day: "2-digit",
@@ -300,16 +414,9 @@ export function DashboardHomePage() {
                     {formatCurrency(forecast.projectedEndBalance, forecastCurrency)}
                   </p>
                   <p className="text-[11px] text-[#C0BCB4]">
-                    {projectedDelta <= 0 ? "Изменение" : "Потенциальный запас"}:{" "}
-                    <span
-                      className={
-                        projectedDelta <= 0
-                          ? "font-mono font-medium text-[#D94F3D]"
-                          : "font-mono font-medium text-[#1A9E6A]"
-                      }
-                    >
-                      {projectedDelta <= 0 ? "−" : "+"}
-                      {formatCurrency(Math.abs(projectedDelta), forecastCurrency)}
+                    Ожидаемое снижение:{" "}
+                    <span className="font-mono font-medium text-[#D94F3D]">
+                      −{formatCurrency(forecast.forecastFutureExpense, forecastCurrency)}
                     </span>
                   </p>
                 </div>
@@ -407,7 +514,7 @@ export function DashboardHomePage() {
                         {formatCurrency(forecast.spentSoFar, forecastCurrency)}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center justify-between gap-3 border-b border-[#F4F2EE] py-2">
                       <span className="text-[11px] text-[#AAA49C]">
                         За последние 7 дней
                       </span>
@@ -415,9 +522,69 @@ export function DashboardHomePage() {
                         {formatCurrency(forecast.recent7Spent, forecastCurrency)}
                       </span>
                     </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[11px] text-[#AAA49C]">
+                        Средств хватит примерно на
+                      </span>
+                      <span className="font-mono text-xs font-medium text-[#333]">
+                        {forecast.daysToZero !== null
+                          ? `${forecast.daysToZero} дн.`
+                          : "—"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              <div className="border-t border-[#EDEAE4] px-6 py-5">
+                <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.5px] text-[#AAA49C]">
+                  Сценарии прогноза
+                </p>
+                <div>
+                  {(
+                    [
+                      {
+                        label: "По среднему за месяц",
+                        scenario: forecast.scenarios.byMonthAverage,
+                      },
+                      {
+                        label: "Смешанная оценка",
+                        scenario: forecast.scenarios.blended,
+                      },
+                      {
+                        label: "По последним 7 дням",
+                        scenario: forecast.scenarios.byRecentAverage,
+                      },
+                    ] as const
+                  ).map(({ label, scenario }) => (
+                    <div
+                      key={label}
+                      className="flex items-center justify-between gap-4 border-b border-[#F4F2EE] py-2.5 last:border-b-0"
+                    >
+                      <span className="text-[12px] text-[#888]">{label}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-[11px] text-[#AAA49C]">
+                          −
+                          {formatCurrency(
+                            scenario.expectedExpense,
+                            forecastCurrency,
+                          )}
+                        </span>
+                        <span className="w-[130px] text-right font-mono text-[12px] font-semibold text-[#111]">
+                          {formatCurrency(
+                            scenario.projectedEndBalance,
+                            forecastCurrency,
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <p className="border-t border-[#EDEAE4] px-6 py-3 text-[11px] text-[#AAA49C]">
+                {forecast.calculationNote}
+              </p>
             </div>
           )}
         </CardContent>
@@ -427,6 +594,11 @@ export function DashboardHomePage() {
         summary={data?.emotionsSummary}
         isLoading={isLoading}
         isError={isError}
+      />
+
+      <FinancialInsightsBlock
+        insights={data?.insights}
+        isLoading={isLoading}
       />
 
       <Card className="overflow-hidden border-[#DDD9D1]">
@@ -599,7 +771,7 @@ export function DashboardHomePage() {
                   >
                     {item.type === "EXPENSE" ? "Expense" : "Income"}
                   </span>
-                  {item.emotion ? (
+                  {item.type === "EXPENSE" && item.emotion ? (
                     (() => {
                       const meta = getTransactionEmotionMeta(item.emotion);
                       if (item.emotion === "IMPULSIVE") {

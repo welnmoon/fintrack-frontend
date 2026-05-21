@@ -92,7 +92,7 @@ const getDefaultValues = (
 const submitLabelByType: Partial<Record<TransactionType, string>> = {
   EXPENSE: "Добавить расход",
   INCOME: "Добавить доход",
-  ADJUSTMENT: "Сохранить корректировку",
+  ADJUSTMENT: "Добавить корректировку",
 };
 
 function resolveCategoryColor(colorKey: string | null | undefined): string {
@@ -257,6 +257,22 @@ const CreateTransactionForm = ({
     });
   }, [form, isAdjustment]);
 
+  // Auto-select the only account when it's available
+  useEffect(() => {
+    if (!accountOptions || accountOptions.length !== 1) return;
+    if (form.getValues("accountId")) return;
+    form.setValue("accountId", accountOptions[0].id, {
+      shouldValidate: true,
+      shouldDirty: false,
+    });
+  }, [accountOptions, form]);
+
+  // Clear emotion when switching away from EXPENSE
+  useEffect(() => {
+    if (effectiveType === "EXPENSE") return;
+    form.setValue("emotion", undefined, { shouldDirty: true });
+  }, [effectiveType, form]);
+
   const filteredCategories =
     categories?.filter((category) => {
       if (effectiveType === "INCOME" || effectiveType === "EXPENSE") {
@@ -303,6 +319,23 @@ const CreateTransactionForm = ({
   const noteError = form.formState.errors.note?.message;
   const typeError = form.formState.errors.type?.message;
 
+  const hasNoAccounts = !isAccountsLoading && accountOptions?.length === 0;
+
+  if (hasNoAccounts) {
+    return (
+      <Card className="mt-5 border-border/70 shadow-none">
+        <CardContent className="p-4 sm:p-5">
+          <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 px-4 py-8 text-center">
+            <p className="text-sm font-medium text-foreground">Нет доступных счетов</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Сначала создайте счёт, чтобы добавить операцию.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mt-5 border-border/70 shadow-none">
       <CardContent className="p-4 sm:p-5">
@@ -346,6 +379,38 @@ const CreateTransactionForm = ({
             </div>
             {amountError && <p className="text-xs text-red-500">{amountError}</p>}
           </div>
+
+          {!fixedType && (
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                Тип операции
+              </Label>
+              <Controller
+                name="type"
+                control={form.control}
+                render={({ field }) => (
+                  <div className="flex gap-1 rounded-xl border border-border/70 bg-muted/10 p-1">
+                    {transactionTypeOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => field.onChange(option.value)}
+                        className={cn(
+                          "flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-150",
+                          field.value === option.value
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              />
+              {typeError && <p className="text-xs text-red-500">{typeError}</p>}
+            </div>
+          )}
 
           <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_200px]">
             <div className="space-y-2">
@@ -489,43 +554,7 @@ const CreateTransactionForm = ({
               <div className="space-y-4 rounded-2xl border border-dashed border-border/70 bg-muted/5 p-4">
                 <Separator />
 
-                {!fixedType && (
-                  <div className="space-y-2">
-                    <Label htmlFor="create-transaction-type">Тип операции</Label>
-                    <Controller
-                      name="type"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger
-                            id="create-transaction-type"
-                            className={cn(
-                              typeError && "border-red-400 focus:ring-red-400",
-                            )}
-                          >
-                            {transactionTypeOptions.find(
-                              (option) => option.value === field.value,
-                            )?.label ?? (
-                              <span className="text-muted-foreground">
-                                Выберите тип
-                              </span>
-                            )}
-                          </SelectTrigger>
-                          <SelectContent>
-                            {transactionTypeOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    {typeError && <p className="text-xs text-red-500">{typeError}</p>}
-                  </div>
-                )}
-
-                <div className="grid gap-4 md:grid-cols-2">
+                {effectiveType === "EXPENSE" && (
                   <div className="space-y-2">
                     <Label htmlFor="create-transaction-emotion">Эмоция</Label>
                     <Controller
@@ -542,9 +571,7 @@ const CreateTransactionForm = ({
                               !field.value &&
                                 "border-primary/30 bg-primary/10 text-foreground",
                             )}
-                            onClick={() =>
-                              field.onChange(undefined)
-                            }
+                            onClick={() => field.onChange(undefined)}
                           >
                             Без эмоции
                           </Button>
@@ -579,26 +606,26 @@ const CreateTransactionForm = ({
                       нежелательные траты.
                     </p>
                   </div>
+                )}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="create-transaction-date">Дата</Label>
-                    <Controller
-                      name="occurredAt"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Input
-                          {...field}
-                          id="create-transaction-date"
-                          type="date"
-                          className={cn(
-                            dateError && "border-red-400 focus-visible:ring-red-400",
-                          )}
-                          value={(field.value as string | undefined) ?? ""}
-                        />
-                      )}
-                    />
-                    {dateError && <p className="text-xs text-red-500">{dateError}</p>}
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-transaction-date">Дата</Label>
+                  <Controller
+                    name="occurredAt"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        id="create-transaction-date"
+                        type="date"
+                        className={cn(
+                          dateError && "border-red-400 focus-visible:ring-red-400",
+                        )}
+                        value={(field.value as string | undefined) ?? ""}
+                      />
+                    )}
+                  />
+                  {dateError && <p className="text-xs text-red-500">{dateError}</p>}
                 </div>
 
                 <div className="space-y-2">

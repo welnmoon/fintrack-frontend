@@ -75,6 +75,11 @@ export type DashboardExpensePie = {
 
 export type DashboardForecastConfidence = "low" | "medium" | "high";
 
+export type DashboardForecastScenario = {
+  expectedExpense: number;
+  projectedEndBalance: number;
+};
+
 export type DashboardForecast = {
   currency: CurrencyCode | null;
   currentBalance: number;
@@ -89,6 +94,13 @@ export type DashboardForecast = {
   daysRemaining: number;
   basedOnTransactionsCount: number;
   confidence: DashboardForecastConfidence;
+  calculationNote: string;
+  daysToZero: number | null;
+  scenarios: {
+    byMonthAverage: DashboardForecastScenario;
+    blended: DashboardForecastScenario;
+    byRecentAverage: DashboardForecastScenario;
+  };
 };
 
 export type DashboardEmotionDistributionItem = {
@@ -108,16 +120,30 @@ export type DashboardEmotionsSummary = {
   currency: CurrencyCode;
   fxUnavailable: boolean;
   fxStale: boolean;
+  periodLabel: string;
+  totalExpensesCount: number;
+  markedExpensesCount: number;
+  markedExpensesPercent: number;
   totalTransactionsWithEmotion: number;
   impulsiveCount: number;
   regretCount: number;
   stressCount: number;
   impulsiveAmount: number;
   regretAmount: number;
+  stressAmount: number;
   emotionDistribution: DashboardEmotionDistributionItem[];
   impulsiveExpenseShare: number;
   regretExpenseShare: number;
+  stressShareByAmount: number;
+  impulsiveShareByCount: number;
+  regretShareByCount: number;
   topEmotionCategories: DashboardEmotionCategory[];
+};
+
+export type FinancialInsight = {
+  type: "positive" | "warning" | "info";
+  title: string;
+  description: string;
 };
 
 export type GetDashboardResponse = {
@@ -127,6 +153,7 @@ export type GetDashboardResponse = {
   expensePie: DashboardExpensePie;
   forecast: DashboardForecast;
   emotionsSummary: DashboardEmotionsSummary;
+  insights: FinancialInsight[];
 };
 
 export type BalanceHistoryInterval = "day" | "week" | "month";
