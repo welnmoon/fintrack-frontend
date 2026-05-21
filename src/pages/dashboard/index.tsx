@@ -24,6 +24,7 @@ import BalanceHistory from "@/widgets/dashboard/balance-history/ui/balance-histo
 import PriceChart from "@/widgets/dashboard/forex-chart/ui/forex-chart";
 import { DateRangePicker } from "@/widgets/dashboard/expense-pie/ui/date-range-picker";
 import { EmotionSummaryCard } from "@/widgets/dashboard/emotion-summary/ui/emotion-summary-card";
+import { ExportReportsCard } from "@/widgets/dashboard/export-reports/ui/export-reports-card";
 
 const insightMeta: Record<
   FinancialInsight["type"],
@@ -812,6 +813,12 @@ export function DashboardHomePage() {
           )}
         </CardContent>
       </Card>
+
+      <ExportReportsCard
+        data={data}
+        currency={totalCurrency ?? forecastCurrency}
+        isLoading={isLoading}
+      />
     </PageContainer>
   );
 }
