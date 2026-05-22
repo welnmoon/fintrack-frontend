@@ -1,27 +1,25 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
+import { useGetDashboard } from "@/features/get-dashboard/api/use-get-dashboard";
 import { PageContainer, PageHeader } from "@/widgets/page-shell";
+import { ExportReportsCard } from "@/widgets/dashboard/export-reports/ui/export-reports-card";
 
 export function ReportsPage() {
+  const { data, isLoading } = useGetDashboard();
+  const currency =
+    data?.accountsTotalBalance.currency ??
+    data?.forecast.currency ??
+    "KZT";
+
   return (
     <PageContainer>
       <PageHeader
-        title="Отчеты"
-        description="Раздел аналитики находится в планируемых доработках."
+        title="Отчёты"
+        description="Экспортируйте операции и аналитические данные для архива, Excel или внешнего анализа."
       />
-
-      <Card>
-        <CardHeader className="border-b border-[#EDEAE4]">
-          <CardTitle className="text-[15px] font-semibold tracking-[-0.2px] text-[#111]">
-            Отчеты по финансам
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <p className="text-sm text-[#AAA49C]">
-            Здесь будут сводные отчеты по доходам, расходам и балансу за
-            выбранный период.
-          </p>
-        </CardContent>
-      </Card>
+      <ExportReportsCard
+        data={data}
+        currency={currency}
+        isLoading={isLoading}
+      />
     </PageContainer>
   );
 }
