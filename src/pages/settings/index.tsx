@@ -2,7 +2,6 @@ import { APP_THEMES, useTheme } from "@/app/providers";
 import { useGetUser } from "@/entities/user/api/use-get-user";
 import { useLogout } from "@/features/auth-login/api/use-logout";
 import LoginForm from "@/features/auth-login/ui/login-form";
-import UpdateUserCurrencyForm from "@/features/update-user/ui/update-user-currency";
 import UpdateUserForm from "@/features/update-user/ui/update-user";
 import { cn } from "@/shared/lib";
 import {
@@ -10,11 +9,6 @@ import {
   AvatarFallback,
   Badge,
   Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Separator,
   Switch,
   Tabs,
@@ -26,10 +20,11 @@ import { PageContainer, PageHeader } from "@/widgets/page-shell";
 import {
   Check,
   Layers3,
+  LogOut,
   MoonStar,
   Palette,
-  Sparkles,
   SunMedium,
+  User2,
 } from "lucide-react";
 import { HashLoader } from "react-spinners";
 
@@ -37,6 +32,12 @@ const appearanceLabelMap = {
   light: "Light",
   dark: "Dark",
 } as const;
+
+const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+  <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+    {children}
+  </p>
+);
 
 export function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -60,272 +61,281 @@ export function SettingsPage() {
     .filter(Boolean)
     .join(" ");
 
+  const initials = displayName
+    ? displayName.charAt(0).toUpperCase()
+    : user?.email?.charAt(0).toUpperCase() ?? "U";
+
   return (
     <PageContainer>
       <PageHeader
         title="Настройки"
-        description="Профиль пользователя и локальные параметры интерфейса."
+        description="Профиль пользователя и параметры интерфейса."
       />
 
-      <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="flex h-auto flex-wrap gap-2 rounded-2xl bg-transparent p-0">
-          <TabsTrigger value="profile">Профиль</TabsTrigger>
-          <TabsTrigger value="interface">Интерфейс</TabsTrigger>
-          <TabsTrigger value="general">Общие</TabsTrigger>
+      <Tabs defaultValue="profile">
+        <TabsList className="flex h-auto w-full flex-wrap gap-1.5 rounded-xl border bg-muted/20 p-1.5 sm:w-auto sm:inline-flex">
+          <TabsTrigger
+            value="profile"
+            className="flex items-center gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            <User2 className="h-3.5 w-3.5" />
+            Профиль
+          </TabsTrigger>
+          <TabsTrigger
+            value="interface"
+            className="flex items-center gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            <Palette className="h-3.5 w-3.5" />
+            Интерфейс
+          </TabsTrigger>
+          <TabsTrigger
+            value="general"
+            className="flex items-center gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            <Layers3 className="h-3.5 w-3.5" />
+            Общие
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile">
-          <Card className="max-w-2xl">
-            <CardHeader className="border-b border-[#EDEAE4]">
-              <CardTitle className="text-[15px] font-semibold tracking-[-0.2px] text-[#111]">
-                Профиль пользователя
-              </CardTitle>
-              <CardDescription>
-                Личные данные и настройки аккаунта.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 p-6">
-              {isUserLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <HashLoader size={30} color="hsl(var(--foreground))" />
+        {/* ── Profile ── */}
+        <TabsContent value="profile" className="mt-6 max-w-2xl space-y-8">
+          {isUserLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <HashLoader size={28} color="hsl(var(--foreground))" />
+            </div>
+          ) : isUserError ? (
+            <p className="text-sm text-destructive">
+              Ошибка загрузки:{" "}
+              {userError instanceof Error
+                ? userError.message
+                : "Неизвестная ошибка"}
+            </p>
+          ) : !user ? (
+            <LoginForm />
+          ) : (
+            <>
+              {/* User card */}
+              <div className="flex items-center gap-4 rounded-2xl border bg-card px-5 py-4">
+                <Avatar className="h-14 w-14 shrink-0 border border-border/60 text-lg">
+                  <AvatarFallback className="bg-muted text-base font-semibold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">
+                    {displayName || "Без имени"}
+                  </p>
+                  <p className="truncate text-sm text-muted-foreground">
+                    {user.email}
+                  </p>
+                  <div className="mt-1.5">
+                    <Badge variant="secondary" className="text-xs">
+                      {user.defaultCurrency ?? "KZT"}
+                    </Badge>
+                  </div>
                 </div>
-              ) : isUserError ? (
-                <p className="text-sm text-destructive">
-                  Ошибка при загрузке данных пользователя: {" "}
-                  {userError instanceof Error
-                    ? userError.message
-                    : "Неизвестная ошибка"}
-                </p>
-              ) : !user ? (
-                <LoginForm />
-              ) : (
-                <>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-14 w-14 border border-[#DDD9D1]">
-                      <AvatarFallback className="text-lg">
-                        {displayName ? displayName.charAt(0).toUpperCase() : "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-lg font-semibold">{displayName}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                    </div>
+              </div>
+
+              {/* Edit form */}
+              <div>
+                <SectionLabel>Редактировать профиль</SectionLabel>
+                <UpdateUserForm user={user} />
+              </div>
+
+              <Separator />
+
+              {/* Danger zone */}
+              <div>
+                <SectionLabel>Действия</SectionLabel>
+                <div className="flex items-center justify-between rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium">Выйти из аккаунта</p>
+                    <p className="text-xs text-muted-foreground">
+                      Сессия будет завершена на этом устройстве.
+                    </p>
                   </div>
-
-                  <Separator />
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Валюта по умолчанию
-                    </span>
-                    <Badge>{user.defaultCurrency ?? "KZT"}</Badge>
-                  </div>
-
-                  <UpdateUserCurrencyForm user={user} />
-
-                  <Separator />
-
-                  <UpdateUserForm user={user} />
-
-                  <Separator />
-
                   <Button
+                    variant="destructive"
+                    size="sm"
                     disabled={logoutIsPending}
                     onClick={() => logoutMutate()}
-                    variant="destructive"
+                    className="shrink-0"
                   >
-                    {logoutIsPending ? "..." : "Выйти"}
+                    <LogOut className="h-3.5 w-3.5" />
+                    {logoutIsPending ? "Выхожу..." : "Выйти"}
                   </Button>
-
-                  {logoutIsError ? (
-                    <p className="text-sm text-destructive">
-                      {logoutError instanceof Error
-                        ? logoutError.message
-                        : "Ошибка выхода"}
-                    </p>
-                  ) : null}
-                </>
-              )}
-            </CardContent>
-          </Card>
+                </div>
+                {logoutIsError && (
+                  <p className="mt-2 text-sm text-destructive">
+                    {logoutError instanceof Error
+                      ? logoutError.message
+                      : "Ошибка выхода"}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
         </TabsContent>
 
-        <TabsContent value="interface" className="space-y-4">
-          <div className="grid gap-4 xl:grid-cols-[1.45fr_0.85fr]">
-            <Card>
-              <CardHeader className="space-y-3 border-b border-[#EDEAE4]">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Palette className="h-4 w-4" />
-                  <span className="text-sm font-medium">Оформление</span>
-                </div>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <CardTitle>Темы интерфейса</CardTitle>
-                    <CardDescription className="mt-1">
-                      Переключай оформление без сервера. Новая тема применяется
-                      сразу ко всему dashboard.
-                    </CardDescription>
-                  </div>
-                  <Badge variant="secondary" className="gap-1.5">
-                    {activeTheme.appearance === "dark" ? (
-                      <MoonStar className="h-3.5 w-3.5" />
-                    ) : (
-                      <SunMedium className="h-3.5 w-3.5" />
+        {/* ── Interface ── */}
+        <TabsContent value="interface" className="mt-6 space-y-6">
+          {/* Active theme banner */}
+          <div className="flex items-center justify-between rounded-2xl border bg-card px-5 py-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Активная тема
+              </p>
+              <p className="mt-0.5 font-semibold">{activeTheme.name}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {activeTheme.description}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <div className="flex gap-1.5">
+                {activeTheme.preview.map((color) => (
+                  <span
+                    key={color}
+                    className="h-8 w-8 rounded-lg border border-black/10 shadow-sm"
+                    style={{ backgroundColor: `hsl(${color})` }}
+                  />
+                ))}
+              </div>
+              <Badge
+                variant="secondary"
+                className="ml-3 gap-1.5"
+              >
+                {activeTheme.appearance === "dark" ? (
+                  <MoonStar className="h-3 w-3" />
+                ) : (
+                  <SunMedium className="h-3 w-3" />
+                )}
+                {appearanceLabelMap[activeTheme.appearance]}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Theme grid */}
+          <div>
+            <SectionLabel>Выбрать тему</SectionLabel>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {APP_THEMES.map((item) => {
+                const isActive = item.id === theme;
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setTheme(item.id)}
+                    className={cn(
+                      "group rounded-2xl border bg-card p-4 text-left transition-all",
+                      "hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md",
+                      isActive &&
+                        "border-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.25)] bg-primary/[0.04]",
                     )}
-                    {appearanceLabelMap[activeTheme.appearance]}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6 p-6">
-                <div className="rounded-2xl border bg-muted/20 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Активная тема
-                      </p>
-                      <p className="mt-1 text-xl font-semibold">
-                        {activeTheme.name}
-                      </p>
-                      <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                        {activeTheme.description}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {activeTheme.preview.map((color) => (
+                  >
+                    {/* Color swatches */}
+                    <div className="mb-3 flex gap-1.5">
+                      {item.preview.map((color) => (
                         <span
-                          key={color}
-                          className="h-10 w-10 rounded-xl border border-black/10 shadow-sm"
+                          key={`${item.id}-${color}`}
+                          className="h-10 flex-1 rounded-lg border border-black/10 shadow-sm"
                           style={{ backgroundColor: `hsl(${color})` }}
                         />
                       ))}
                     </div>
-                  </div>
-                </div>
 
-                <div className="grid gap-3 md:grid-cols-2">
-                  {APP_THEMES.map((item) => {
-                    const isActive = item.id === theme;
+                    {/* Mini bar */}
+                    <div className="mb-3 flex items-center gap-1.5">
+                      <span
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ backgroundColor: `hsl(${item.preview[2]})` }}
+                      />
+                      <div
+                        className="h-1.5 flex-1 rounded-full"
+                        style={{ backgroundColor: `hsl(${item.preview[1]})` }}
+                      />
+                      <div
+                        className="h-1.5 w-10 rounded-full"
+                        style={{ backgroundColor: `hsl(${item.preview[0]})` }}
+                      />
+                    </div>
 
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setTheme(item.id)}
-                        className={cn(
-                          "rounded-2xl border bg-card p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md",
-                          isActive &&
-                            "border-primary bg-primary/[0.06] shadow-[0_0_0_1px_hsl(var(--primary)/0.25)]",
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-semibold">{item.name}</p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {item.description}
-                            </p>
-                          </div>
-                          {isActive ? (
-                            <span className="rounded-full bg-primary/12 p-1 text-primary">
-                              <Check className="h-4 w-4" />
-                            </span>
-                          ) : (
-                            <Badge variant="outline">
-                              {appearanceLabelMap[item.appearance]}
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="mt-4 space-y-3">
-                          <div className="flex gap-2">
-                            {item.preview.map((color) => (
-                              <span
-                                key={`${item.id}-${color}`}
-                                className="h-12 flex-1 rounded-xl border border-black/10 shadow-sm"
-                                style={{ backgroundColor: `hsl(${color})` }}
-                              />
-                            ))}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="h-2 w-2 rounded-full"
-                              style={{
-                                backgroundColor: `hsl(${item.preview[2]})`,
-                              }}
-                            />
-                            <div
-                              className="h-2 flex-1 rounded-full"
-                              style={{
-                                backgroundColor: `hsl(${item.preview[1]})`,
-                              }}
-                            />
-                            <div
-                              className="h-2 w-14 rounded-full"
-                              style={{
-                                backgroundColor: `hsl(${item.preview[0]})`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="space-y-4">
-              <Card>
-                <CardHeader className="border-b border-[#EDEAE4]">
-                  <CardTitle>Подсказка</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 p-6 text-sm text-muted-foreground">
-                  <div className="flex items-start gap-2">
-                    <Sparkles className="mt-0.5 h-4 w-4 text-primary" />
-                    <p>
-                      Тема применяется мгновенно и сохраняется локально в
-                      браузере.
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Sparkles className="mt-0.5 h-4 w-4 text-primary" />
-                    <p>
-                      Для аналитики и трейдинга лучше работают `Dark`,
-                      `Deep Charcoal` и `Monochrome`.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">
+                          {item.name}
+                        </p>
+                        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                          {item.description}
+                        </p>
+                      </div>
+                      {isActive ? (
+                        <span className="mt-0.5 shrink-0 rounded-full bg-primary/12 p-1 text-primary">
+                          <Check className="h-3.5 w-3.5" />
+                        </span>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="mt-0.5 shrink-0 text-[10px]"
+                        >
+                          {appearanceLabelMap[item.appearance]}
+                        </Badge>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="general">
-          <Card>
-            <CardHeader className="border-b border-[#EDEAE4]">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Layers3 className="h-4 w-4" />
-                <span className="text-sm font-medium">Общее поведение</span>
-              </div>
-              <CardTitle>Общие параметры</CardTitle>
-              <CardDescription>
-                Базовые настройки интерфейса без привязки к серверу.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 p-6">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="font-medium">Компактный режим</p>
-                  <p className="text-sm text-muted-foreground">
-                    Уменьшенные отступы в таблицах и карточках.
-                  </p>
-                </div>
-                <Switch />
-              </div>
-            </CardContent>
-          </Card>
+        {/* ── General ── */}
+        <TabsContent value="general" className="mt-6 max-w-2xl">
+          <SectionLabel>Общее поведение</SectionLabel>
+          <div className="divide-y divide-border/60 rounded-2xl border bg-card">
+            <SettingRow
+              title="Компактный режим"
+              description="Уменьшенные отступы в таблицах и карточках."
+            >
+              <Switch />
+            </SettingRow>
+
+            <SettingRow
+              title="Анимации интерфейса"
+              description="Плавные переходы при смене разделов."
+            >
+              <Switch defaultChecked />
+            </SettingRow>
+
+            <SettingRow
+              title="Звуковые уведомления"
+              description="Воспроизводить звук при добавлении транзакции."
+            >
+              <Switch />
+            </SettingRow>
+          </div>
         </TabsContent>
       </Tabs>
     </PageContainer>
+  );
+}
+
+function SettingRow({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-5 py-4">
+      <div className="min-w-0">
+        <p className="text-sm font-medium">{title}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
   );
 }

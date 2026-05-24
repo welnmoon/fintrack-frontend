@@ -1,31 +1,16 @@
-import { Link } from "react-router-dom";
-import { Button, Card, CardContent } from "@/shared/ui";
-import { ROUTES } from "@/shared/config";
-import { PageContainer, PageHeader } from "@/widgets/page-shell";
 import PriceChart from "@/widgets/dashboard/forex-chart/ui/forex-chart";
 
 export function ForexPage() {
   return (
-    <PageContainer className="space-y-4">
-      <PageHeader
-        title="Forex"
-        description="Подробный просмотр котировок с выбором валютной пары, таймфрейма и вида графика."
-        actions={
-          <Button asChild variant="outline" size="sm">
-            <Link to={ROUTES.overview}>Назад к дашборду</Link>
-          </Button>
-        }
+    <div
+      className="-mx-4 -my-6 overflow-hidden sm:-mx-6 lg:-mx-8 lg:-my-8"
+      style={{ height: "calc(100vh - 4rem)" }}
+    >
+      <PriceChart
+        variant="page"
+        showChartTypeControl
+        showExtendedMeta
       />
-
-      <Card className="overflow-hidden">
-        <CardContent className="p-0 sm:p-0">
-          <PriceChart
-            showChartTypeControl
-            showExtendedMeta
-            chartViewportClassName="h-[58vh] min-h-[420px] lg:h-[72vh]"
-          />
-        </CardContent>
-      </Card>
-    </PageContainer>
+    </div>
   );
 }

@@ -16,7 +16,8 @@ const CreateTransactionDialog = ({
   triggerLabel = "Добавить транзакцию",
 }: CreateTransactionDialogProps) => {
   const [open, setOpen] = useState(false);
-  const transactionTypeLabel = type === "INCOME" ? "Доход" : "Расход";
+  const transactionTypeLabel =
+    type === "INCOME" ? "доход" : type === "EXPENSE" ? "расход" : "транзакцию";
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
@@ -35,7 +36,7 @@ const CreateTransactionDialog = ({
             "focus:outline-none",
           )}
         >
-          <DialogPrimitive.Title className="text-lg font-semibold">
+          <DialogPrimitive.Title className="text-lg font-semibold capitalize">
             Добавить {transactionTypeLabel}
           </DialogPrimitive.Title>
           {/* <DialogPrimitive.Description className="mt-1 text-sm text-muted-foreground">

@@ -460,6 +460,63 @@ function TxRow({
   );
 }
 
+/* ─── Group by month ─── */
+function groupByMonth(txs: Transaction[]) {
+  const map = new Map<string, Transaction[]>();
+  for (const tx of txs) {
+    const key = `${tx.occurredAt.getFullYear()}-${String(tx.occurredAt.getMonth() + 1).padStart(2, "0")}`;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(tx);
+  }
+  return [...map.entries()]
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([key, items]) => {
+      const label = items[0].occurredAt
+        .toLocaleDateString("ru-RU", { month: "long", year: "numeric" })
+        .replace(" г.", "");
+      const income = items
+        .filter((t) => t.type === "INCOME")
+        .reduce((s, t) => s + Number(t.amount), 0);
+      const expense = items
+        .filter((t) => t.type === "EXPENSE")
+        .reduce((s, t) => s + Number(t.amount), 0);
+      const net = income - expense;
+      const currency = items[0].account.currency;
+      return { key, label, items, net, currency };
+    });
+}
+
+/* ─── Month divider ─── */
+function MonthDivider({
+  label,
+  net,
+  currency,
+}: {
+  label: string;
+  net: number;
+  currency: string;
+}) {
+  const isPositive = net >= 0;
+  return (
+    <div className="flex items-center gap-2.5 border-t border-[#E5E2D8] bg-[#F7F5F0] px-5 py-2">
+      <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.06em] text-[#7A7971]">
+        {label}
+      </span>
+      <span className="text-[10px] font-medium text-[#C0BDB4]">· итого</span>
+      <span className="h-px flex-1 bg-[#E5E2D8]" />
+      <span
+        className={cn(
+          "font-mono text-[11px] font-medium",
+          isPositive ? "text-[#5A9A6A]" : "text-[#9A8A78]",
+        )}
+      >
+        {isPositive ? "+" : "−"}
+        {fmtRow(Math.abs(net), currency)}
+      </span>
+    </div>
+  );
+}
+
 /* ─── Date group ─── */
 function DateGroup({
   label,
@@ -562,8 +619,8 @@ export function TransactionList({
   /* Accounts for legend */
   const legendAccounts = [...accountById.values()].slice(0, 5);
 
-  /* Date groups */
-  const groups = groupByDate(transactions ?? []);
+  /* Month groups */
+  const monthGroups = groupByMonth(transactions ?? []);
 
   /* Footer stats */
   const uniqueDays = new Set(
@@ -676,15 +733,26 @@ export function TransactionList({
           {emptyLabel}
         </div>
       ) : (
-        groups.map((g) => (
-          <DateGroup
-            key={g.key}
-            label={g.label}
-            items={g.items}
-            accountById={accountById}
-            openId={openId}
-            setOpenId={setOpenId}
-          />
+        monthGroups.map((month, mIdx) => (
+          <div key={month.key}>
+            {mIdx > 0 && (
+              <MonthDivider
+                label={month.label}
+                net={month.net}
+                currency={month.currency}
+              />
+            )}
+            {groupByDate(month.items).map((g) => (
+              <DateGroup
+                key={g.key}
+                label={g.label}
+                items={g.items}
+                accountById={accountById}
+                openId={openId}
+                setOpenId={setOpenId}
+              />
+            ))}
+          </div>
         ))
       )}
 

@@ -88,7 +88,7 @@ type Props = {
   showExtendedMeta?: boolean;
   chartViewportClassName?: string;
   className?: string;
-  variant?: "default" | "dashboard";
+  variant?: "default" | "dashboard" | "page";
 };
 
 type Status = "connecting" | "live" | "stale" | "error";
@@ -409,6 +409,155 @@ export default function PriceChart({
       )}
     />
   );
+
+  if (variant === "page") {
+    return (
+      <div className={cn("flex h-full flex-col overflow-hidden", className)}>
+        {/* ── Controls bar ── */}
+        <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#E5E2D8] bg-[#FAFAF7] px-6 py-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Symbol pills */}
+            <div className="flex flex-wrap items-center">
+              {FOREX_SYMBOL_OPTIONS.map((item, index) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => {
+                    if (item === selectedSymbol) return;
+                    resetStreamState();
+                    setSelectedSymbol(item);
+                  }}
+                  className={cn(
+                    "h-7 border border-[#DDD9D1] px-3 font-mono text-[11px] font-medium tracking-[0.3px] text-[#AAA49C] transition-colors",
+                    index === 0 && "rounded-l-[7px]",
+                    index === FOREX_SYMBOL_OPTIONS.length - 1
+                      ? "rounded-r-[7px]"
+                      : "border-r-0",
+                    selectedSymbol === item && "border-[#111] bg-[#111] text-white",
+                  )}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+
+            <div className="h-5 w-px bg-[#E5E2D8]" />
+
+            {/* Interval pills */}
+            <div className="flex flex-wrap gap-1">
+              {INTERVAL_OPTIONS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => {
+                    if (item === selectedInterval) return;
+                    resetStreamState();
+                    setSelectedInterval(item);
+                  }}
+                  className={cn(
+                    "h-6 rounded-[5px] px-2.5 font-mono text-[10px] font-medium text-[#B5B0A8] transition-colors hover:bg-[#F4F2EE] hover:text-[#555]",
+                    selectedInterval === item && "bg-[#F0EEE9] font-semibold text-[#333]",
+                  )}
+                >
+                  {INTERVAL_LABEL_SHORT[item]}
+                </button>
+              ))}
+            </div>
+
+            {showChartTypeControl && (
+              <>
+                <div className="h-5 w-px bg-[#E5E2D8]" />
+                <div className="flex items-center gap-1">
+                  {CHART_TYPE_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setSelectedChartType(opt.value)}
+                      className={cn(
+                        "h-6 rounded-[5px] px-2.5 font-mono text-[10px] font-medium text-[#B5B0A8] transition-colors hover:bg-[#F4F2EE] hover:text-[#555]",
+                        selectedChartType === opt.value && "bg-[#F0EEE9] font-semibold text-[#333]",
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Right: status + price */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-[10px] tracking-[0.3px] text-[#AAA49C]">
+              {meta?.symbol ?? selectedSymbol} · {INTERVAL_LABEL_SHORT[meta?.interval ?? selectedInterval]}
+            </span>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2 py-[3px] text-[10px] font-semibold",
+                status === "live"
+                  ? "border-[#C2EDD8] bg-[#EDFAF4] text-[#1A9E6A]"
+                  : status === "stale"
+                    ? "border-[#F3D9A0] bg-[#FEF5E6] text-[#C07C1A]"
+                    : "border-[#DDD9D1] bg-[#F7F6F3] text-[#888]",
+              )}
+            >
+              <span
+                className={cn(
+                  "h-[5px] w-[5px] rounded-full",
+                  status === "live" ? "animate-pulse bg-[#1A9E6A]" : "bg-[#AAA49C]",
+                )}
+              />
+              {getStatusLabel(status)}
+            </span>
+            <span className="rounded-md border border-[#DDD9D1] bg-[#F7F6F3] px-2.5 py-[3px] font-mono text-[12px] font-semibold text-[#111]">
+              {meta?.lastPrice ? meta.lastPrice.toFixed(3) : "—"}
+            </span>
+          </div>
+        </div>
+
+        {/* ── Chart fills remaining height ── */}
+        <div className="min-h-0 flex-1">
+          <div ref={containerRef} className="h-full w-full" />
+        </div>
+
+        {/* ── Footer meta ── */}
+        <div className="grid flex-shrink-0 grid-cols-2 border-t border-[#E5E2D8] sm:grid-cols-4">
+          <div className="border-r border-[#E5E2D8] px-6 py-2.5">
+            <p className="mb-1 font-mono text-[9px] uppercase tracking-[2px] text-[#C0BCB4]">Пара</p>
+            <p className="font-mono text-[13px] font-semibold text-[#333]">
+              {meta?.symbol ?? selectedSymbol}
+            </p>
+          </div>
+          <div className="border-r border-[#E5E2D8] px-6 py-2.5">
+            <p className="mb-1 font-mono text-[9px] uppercase tracking-[2px] text-[#C0BCB4]">Цена</p>
+            <p className="font-mono text-[13px] font-semibold text-[#333]">
+              {meta?.lastPrice ? meta.lastPrice.toFixed(3) : "Ожидание"}
+            </p>
+          </div>
+          <div className="border-r border-[#E5E2D8] px-6 py-2.5">
+            <p className="mb-1 font-mono text-[9px] uppercase tracking-[2px] text-[#C0BCB4]">Обновлено</p>
+            <p className="font-mono text-[13px] font-semibold text-[#333]">
+              {meta?.updatedAt
+                ? new Date(meta.updatedAt).toLocaleTimeString("ru-RU")
+                : "Ожидание данных"}
+            </p>
+          </div>
+          <div className="px-6 py-2.5">
+            <p className="mb-1 font-mono text-[9px] uppercase tracking-[2px] text-[#C0BCB4]">История</p>
+            <p className={cn("font-mono text-[13px] font-semibold", meta?.backfillCompleted ? "text-[#1A9E6A]" : "text-[#333]")}>
+              {meta?.backfillCompleted ? "Синхронизирована" : "Догружается"}
+            </p>
+          </div>
+        </div>
+
+        {(status === "stale" || streamError || meta?.lastErrorMessage) && (
+          <p className="flex-shrink-0 border-t border-[#E5E2D8] px-6 py-2.5 text-xs text-amber-600">
+            {streamError ?? meta?.lastErrorMessage ?? "Источник котировок недоступен, данные временно заморожены"}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   if (variant === "dashboard") {
     return (
