@@ -118,18 +118,15 @@ function GroupHeader({ label, count }: { label: string; count: number }) {
 /* ─── Category row ─── */
 function CategoryRow({
   category,
-  allCategories,
   txCount,
 }: {
   category: UserCategory;
-  allCategories: UserCategory[];
   txCount: number;
 }) {
   const color = resolveColor(category.colorKey);
-  const IconComp =
-    category.iconKey
-      ? (getCategoryIcon(category.iconKey as CategoryIconKey) ?? Tag)
-      : Tag;
+  const IconComp = category.iconKey
+    ? (getCategoryIcon(category.iconKey as CategoryIconKey) ?? Tag)
+    : Tag;
   const isIncome = category.type === "INCOME";
 
   return (
@@ -217,10 +214,9 @@ function CreateCategoryModal({
   const previewColor = watchedColorKey
     ? CATEGORY_COLORS[watchedColorKey]?.hex
     : "#888888";
-  const PreviewIcon =
-    watchedIconKey
-      ? (getCategoryIcon(watchedIconKey as CategoryIconKey) ?? Tag)
-      : Tag;
+  const PreviewIcon = watchedIconKey
+    ? (getCategoryIcon(watchedIconKey as CategoryIconKey) ?? Tag)
+    : Tag;
   const isIncome = watchedType === "INCOME";
 
   const onSubmit = (values: CreateCategorySchemaInput) => {
@@ -438,12 +434,7 @@ export function CategoriesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
-  const {
-    data: categories,
-    isLoading,
-    isError,
-    error,
-  } = useGetCategories();
+  const { data: categories, isLoading, isError, error } = useGetCategories();
   const { data: transactions } = useGetTransactions();
 
   const txCountByCat = useMemo(() => {
@@ -467,8 +458,7 @@ export function CategoriesPage() {
   const filteredCategories = useMemo(
     () =>
       sortedCategories.filter((c) => {
-        const matchesFilter =
-          activeFilter === "all" || c.type === activeFilter;
+        const matchesFilter = activeFilter === "all" || c.type === activeFilter;
         const matchesSearch =
           !searchQuery ||
           c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -481,8 +471,12 @@ export function CategoriesPage() {
   );
 
   const totalCount = categories?.length ?? 0;
-  const incomeCount = (categories ?? []).filter((c) => c.type === "INCOME").length;
-  const expenseCount = (categories ?? []).filter((c) => c.type === "EXPENSE").length;
+  const incomeCount = (categories ?? []).filter(
+    (c) => c.type === "INCOME",
+  ).length;
+  const expenseCount = (categories ?? []).filter(
+    (c) => c.type === "EXPENSE",
+  ).length;
 
   const incomeRows = filteredCategories.filter((c) => c.type === "INCOME");
   const expenseRows = filteredCategories.filter((c) => c.type === "EXPENSE");
@@ -598,7 +592,6 @@ export function CategoriesPage() {
                   <CategoryRow
                     key={c.id}
                     category={c}
-                    allCategories={categories ?? []}
                     txCount={txCountByCat.get(c.id) ?? 0}
                   />
                 ))}
@@ -611,7 +604,6 @@ export function CategoriesPage() {
                   <CategoryRow
                     key={c.id}
                     category={c}
-                    allCategories={categories ?? []}
                     txCount={txCountByCat.get(c.id) ?? 0}
                   />
                 ))}
