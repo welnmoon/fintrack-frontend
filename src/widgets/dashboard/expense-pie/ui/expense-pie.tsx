@@ -124,7 +124,7 @@ export default function PieChartWithCustomizedLabel({
         </div>
       </div>
 
-      <div className="min-h-0 min-w-0 flex-1 border-l border-[#EDEAE4]">
+      <div className="max-h-[210px] min-h-0 min-w-0 flex-1 overflow-y-auto border-l border-[#EDEAE4]">
         <ul>
           {data.map((i) => {
             const percent = total > 0 ? (i.amount / total) * 100 : 0;
