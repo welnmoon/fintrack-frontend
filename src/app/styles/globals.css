@@ -262,3 +262,35 @@
     transform: translateX(calc(-50% - 0.75rem));
   }
 }
+
+/* ── Auth page animations ─────────────────────────── */
+@keyframes auth-drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(28px, -22px) scale(1.06); }
+  66%  { transform: translate(-18px, 26px) scale(0.97); }
+  100% { transform: translate(18px, 10px) scale(1.03); }
+}
+
+@keyframes auth-float-y {
+  0%, 100% { transform: translateY(0); opacity: 0.8; }
+  50%       { transform: translateY(-9px); opacity: 1; }
+}
+
+@keyframes auth-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+@keyframes auth-card-in {
+  from { opacity: 0; transform: translateY(28px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes auth-ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes auth-ripple {
+  to { transform: scale(4.5); opacity: 0; }
+}

@@ -1,87 +1,348 @@
-import { Link } from "react-router-dom";
-import { CheckCircle2, ShieldCheck } from "lucide-react";
-import { APP_NAME } from "@/shared/const";
+import { useCallback, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Navigate, Link } from "react-router-dom";
+import { HashLoader } from "react-spinners";
+import { loginSchema, type LoginSchemaType } from "@/features/auth-login/model/schema";
+import { useLogin } from "@/features/auth-login/api/use-login";
+import { useGetUser } from "@/entities/user/api/use-get-user";
 import { ROUTES } from "@/shared/config";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/ui";
-import LoginForm from "@/features/auth-login/ui/login-form";
+import { AuthBg } from "@/shared/ui/components/auth-bg";
+import { AuthInput } from "@/shared/ui/components/auth-input";
+
+const PILLS = [
+  {
+    label: "Баланс",
+    value: "974 440 ₸",
+    valueColor: "#1e5e3e",
+    pos: { top: "9%", left: "6%" },
+    delay: "0s",
+  },
+  {
+    label: "Доход / мес",
+    value: "+217 000 ₸",
+    valueColor: "#1e7a4a",
+    pos: { top: "13%", right: "7%" },
+    delay: "-2.5s",
+  },
+  {
+    label: "Net",
+    value: "−308 380 ₸",
+    valueColor: "#d93025",
+    pos: { bottom: "22%", left: "5%" },
+    delay: "-4s",
+  },
+  {
+    label: "Средств хватит",
+    value: "120 дн.",
+    valueColor: "#2563eb",
+    pos: { bottom: "11%", right: "6%" },
+    delay: "-1.2s",
+  },
+];
 
 export function LoginPage() {
+  const [btnHover, setBtnHover] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const form = useForm<LoginSchemaType>({
+    defaultValues: { email: "", password: "" },
+    resolver: zodResolver(loginSchema),
+    mode: "onChange",
+  });
+
+  const { data: userData, isLoading: isGetUserLoading } = useGetUser();
+  const { mutate, isPending, isSuccess, error } = useLogin();
+
+  if (userData || isSuccess) return <Navigate to={ROUTES.app} />;
+
+  const isBusy = isPending || isGetUserLoading;
+
+  const onSubmit = (values: LoginSchemaType) => {
+    if (isBusy) return;
+    mutate(values);
+  };
+
+  const handleRipple = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const sz = Math.max(rect.width, rect.height);
+    const ripple = document.createElement("span");
+    Object.assign(ripple.style, {
+      position:     "absolute",
+      borderRadius: "50%",
+      background:   "rgba(255,255,255,.25)",
+      width:        `${sz}px`,
+      height:       `${sz}px`,
+      left:         `${e.clientX - rect.left - sz / 2}px`,
+      top:          `${e.clientY - rect.top - sz / 2}px`,
+      transform:    "scale(0)",
+      animation:    "auth-ripple .55s linear forwards",
+      pointerEvents: "none",
+    });
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  }, []);
+
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-100 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(15,23,42,0.14),transparent_30%),radial-gradient(circle_at_100%_100%,rgba(59,130,246,0.15),transparent_34%)]" />
+    <div
+      className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 pb-[38px]"
+      style={{ background: "#f0f5f2", fontFamily: "'DM Sans', sans-serif" }}
+    >
+      <AuthBg />
 
-      <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl items-center">
-        <Card className="w-full overflow-hidden border-slate-200 bg-white shadow-2xl shadow-slate-300/30">
-          <div className="grid lg:grid-cols-[1.08fr_1fr]">
-            <section className="relative hidden bg-slate-950 px-10 py-12 text-white lg:block">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(37,99,235,0.22),transparent_36%)]" />
-
-              <div className="relative">
-                <p className="text-xs uppercase tracking-[0.26em] text-slate-300">
-                  {APP_NAME}
-                </p>
-                <h1 className="mt-4 text-3xl font-semibold leading-tight">
-                  Secure sign in
-                </h1>
-                <p className="mt-4 max-w-md text-sm text-slate-300">
-                  Используйте рабочий email и пароль для доступа к финансовому
-                  кабинету.
-                </p>
-              </div>
-
-              <div className="relative mt-10 space-y-4">
-                <div className="flex items-start gap-3 rounded-xl border border-white/15 bg-white/5 p-4">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 text-blue-300" />
-                  <div>
-                    <p className="text-sm font-medium">
-                      Защищенная авторизация
-                    </p>
-                    <p className="text-xs text-slate-300">
-                      Доступ только для авторизованных пользователей.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 rounded-xl border border-white/15 bg-white/5 p-4">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-blue-300" />
-                  <div>
-                    <p className="text-sm font-medium">Рабочее пространство</p>
-                    <p className="text-xs text-slate-300">
-                      Транзакции, счета и категории в одном интерфейсе.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="px-6 py-8 sm:px-10 sm:py-12">
-              <CardHeader className="px-0 pt-0">
-                <CardTitle className="text-2xl tracking-tight">Войти</CardTitle>
-                <CardDescription>
-                  Введите email и пароль для входа в аккаунт.
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="px-0 pb-0">
-                <LoginForm />
-                <p className="mt-5 text-center text-sm text-muted-foreground">
-                  Нет аккаунта?{" "}
-                  <Link
-                    to={ROUTES.register}
-                    className="font-medium text-foreground underline-offset-4 hover:underline"
-                  >
-                    Зарегистрироваться
-                  </Link>
-                </p>
-              </CardContent>
-            </section>
+      {/* Floating stat pills — only on large screens */}
+      {PILLS.map((pill, i) => (
+        <div
+          key={i}
+          className="pointer-events-none fixed z-[3] hidden lg:block"
+          style={{
+            ...pill.pos,
+            padding:        "10px 16px",
+            background:     "rgba(255,255,255,.82)",
+            border:         "1px solid rgba(30,94,62,.1)",
+            borderRadius:   14,
+            backdropFilter: "blur(14px)",
+            boxShadow:      "0 4px 20px rgba(30,94,62,.08)",
+            animation:      `auth-float-y 7s ease-in-out infinite`,
+            animationDelay: pill.delay,
+          }}
+        >
+          <div
+            style={{
+              fontFamily:    "'Space Mono', monospace",
+              fontSize:      9,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color:         "rgba(13,31,22,.45)",
+            }}
+          >
+            {pill.label}
           </div>
-        </Card>
+          <div
+            style={{
+              fontFamily: "'Space Mono', monospace",
+              fontSize:   13,
+              fontWeight: 700,
+              marginTop:  3,
+              color:      pill.valueColor,
+            }}
+          >
+            {pill.value}
+          </div>
+        </div>
+      ))}
+
+      {/* ── Auth card ── */}
+      <div
+        className="relative z-10 w-full"
+        style={{
+          maxWidth:  420,
+          animation: "auth-card-in .9s cubic-bezier(.16,1,.3,1) both",
+        }}
+      >
+        <div
+          style={{
+            padding:      "44px 40px",
+            background:   "#ffffff",
+            borderRadius: 26,
+            border:       "1px solid rgba(30,94,62,.1)",
+            boxShadow:    "0 20px 60px rgba(30,94,62,.1), 0 4px 16px rgba(30,94,62,.06)",
+          }}
+        >
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 32 }}>
+            <span
+              style={{
+                fontFamily:    "'Syne', sans-serif",
+                fontWeight:    800,
+                fontSize:      20,
+                color:         "#0d1f16",
+                letterSpacing: "0.1em",
+              }}
+            >
+              FINTRACK
+            </span>
+            <span
+              style={{
+                display:      "inline-block",
+                width:        6,
+                height:       6,
+                borderRadius: "50%",
+                background:   "#2d8a5e",
+                boxShadow:    "0 0 8px rgba(45,138,94,.5)",
+                marginLeft:   6,
+                marginTop:    2,
+                animation:    "auth-blink 2s ease-in-out infinite",
+              }}
+            />
+          </div>
+
+          {/* Title */}
+          <h1
+            style={{
+              fontFamily:  "'Syne', sans-serif",
+              fontWeight:  800,
+              fontSize:    38,
+              lineHeight:  1.05,
+              color:       "#0d1f16",
+              marginBottom: 6,
+            }}
+          >
+            Войти<span style={{ color: "#2d8a5e" }}>.</span>
+          </h1>
+          <p
+            style={{
+              fontSize:      13.5,
+              color:         "rgba(13,31,22,.45)",
+              fontWeight:    300,
+              marginBottom:  36,
+              letterSpacing: "0.01em",
+            }}
+          >
+            Доступ к финансовому кабинету
+          </p>
+
+          {/* Form */}
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <Controller
+              control={form.control}
+              name="email"
+              render={({ field, fieldState }) => (
+                <AuthInput
+                  label="Email"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  type="email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  disabled={isBusy}
+                  error={fieldState.error?.message}
+                  name={field.name}
+                />
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name="password"
+              render={({ field, fieldState }) => (
+                <AuthInput
+                  label="Пароль"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  type="password"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  disabled={isBusy}
+                  error={fieldState.error?.message}
+                  name={field.name}
+                />
+              )}
+            />
+
+            {/* Forgot password */}
+            <div style={{ display: "flex", justifyContent: "flex-end", margin: "-8px 0 30px" }}>
+              <span
+                style={{
+                  fontSize: 13,
+                  color:    "#2d8a5e",
+                  opacity:  0.8,
+                  cursor:   "default",
+                }}
+                title="Функция в разработке"
+              >
+                Забыл пароль?
+              </span>
+            </div>
+
+            {/* Submit button */}
+            <button
+              ref={btnRef}
+              type="submit"
+              disabled={isBusy}
+              onClick={handleRipple}
+              onMouseEnter={() => setBtnHover(true)}
+              onMouseLeave={() => setBtnHover(false)}
+              style={{
+                width:        "100%",
+                padding:      16,
+                background:   "linear-gradient(135deg, #1e5e3e 0%, #2d8a5e 100%)",
+                border:       "none",
+                borderRadius: 12,
+                color:        "#fff",
+                fontFamily:   "'Syne', sans-serif",
+                fontWeight:   700,
+                fontSize:     15,
+                letterSpacing: "0.06em",
+                cursor:       isBusy ? "not-allowed" : "pointer",
+                position:     "relative",
+                overflow:     "hidden",
+                opacity:      isBusy ? 0.7 : 1,
+                transform:    btnHover && !isBusy ? "translateY(-2px)" : "none",
+                boxShadow:    btnHover && !isBusy ? "0 10px 32px rgba(30,94,62,.3)" : "none",
+                transition:   "transform .2s, box-shadow .25s",
+              }}
+            >
+              {isPending ? (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <HashLoader size={16} color="#fff" />
+                  Выполняется вход...
+                </span>
+              ) : (
+                "Войти"
+              )}
+            </button>
+
+            {error instanceof Error && (
+              <p
+                style={{
+                  color:     "#d93025",
+                  fontSize:  13,
+                  marginTop: 12,
+                  textAlign: "center",
+                }}
+              >
+                {error.message}
+              </p>
+            )}
+          </form>
+
+          {/* Divider */}
+          <div
+            style={{
+              display:    "flex",
+              alignItems: "center",
+              gap:        14,
+              margin:     "24px 0",
+            }}
+          >
+            <div style={{ flex: 1, height: 1, background: "rgba(13,31,22,.08)" }} />
+            <span
+              style={{
+                fontFamily: "'Space Mono', monospace",
+                fontSize:   11,
+                color:      "rgba(13,31,22,.45)",
+              }}
+            >
+              или
+            </span>
+            <div style={{ flex: 1, height: 1, background: "rgba(13,31,22,.08)" }} />
+          </div>
+
+          {/* Register link */}
+          <p style={{ textAlign: "center", fontSize: 13.5, color: "rgba(13,31,22,.45)" }}>
+            Нет аккаунта?{" "}
+            <Link
+              to={ROUTES.register}
+              style={{ color: "#2d8a5e", textDecoration: "none", fontWeight: 500 }}
+            >
+              Зарегистрироваться
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
