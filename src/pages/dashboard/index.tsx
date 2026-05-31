@@ -662,7 +662,7 @@ export function DashboardHomePage() {
       <Card className="overflow-hidden border-[#DDD9D1]">
         <CardContent className="p-0">
           <div className="grid grid-cols-1 xl:grid-cols-2">
-            <div className="flex min-h-[460px] flex-col border-b border-[#EDEAE4] xl:border-r xl:border-b-0">
+            <div className="flex h-[460px] flex-col border-b border-[#EDEAE4] xl:border-r xl:border-b-0">
               <div className="border-b border-[#EDEAE4] px-6 py-4">
                 <div className="mb-0.5 text-[15px] font-semibold tracking-[-0.2px] text-[#111]">
                   Динамика баланса
@@ -676,7 +676,7 @@ export function DashboardHomePage() {
               </div>
             </div>
 
-            <div className="flex min-h-[460px] flex-col">
+            <div className="flex h-[460px] flex-col">
               <div className="border-b border-[#EDEAE4] px-6 py-4">
                 <div className="mb-0.5 text-[15px] font-semibold tracking-[-0.2px] text-[#111]">
                   Структура расходов

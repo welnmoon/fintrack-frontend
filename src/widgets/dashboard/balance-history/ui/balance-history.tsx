@@ -2,8 +2,10 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
+  type TooltipProps,
   XAxis,
   YAxis,
 } from "recharts";
@@ -23,6 +25,11 @@ const intervalLabel: Record<BalanceHistoryInterval, string> = {
   month: "Месяц",
 };
 
+const STROKE = "#10b981";
+const GRADIENT_ID = "balanceHistGrad";
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
 function formatAxisLabel(
   point: DashboardBalanceHistoryPoint,
   interval: BalanceHistoryInterval,
@@ -38,24 +45,23 @@ function formatAxisLabel(
   }
 
   if (interval === "week") {
-    const startLabel = new Intl.DateTimeFormat("ru-RU", {
+    const s = new Intl.DateTimeFormat("ru-RU", {
       day: "2-digit",
-      month: "short",
+      month: "2-digit",
     }).format(periodStart);
-    const endLabel = new Intl.DateTimeFormat("ru-RU", {
+    const e = new Intl.DateTimeFormat("ru-RU", {
       day: "2-digit",
-      month: "short",
+      month: "2-digit",
     }).format(periodEnd);
-
-    return `${startLabel} - ${endLabel}`;
+    return `${s}–${e}`;
   }
 
-  return new Intl.DateTimeFormat("ru-RU", {
-    month: "short",
-  }).format(periodStart);
+  return new Intl.DateTimeFormat("ru-RU", { month: "short" }).format(
+    periodStart,
+  );
 }
 
-function formatTooltipLabel(
+function formatTooltipDate(
   periodStart: string,
   periodEnd: string,
   interval: BalanceHistoryInterval,
@@ -65,23 +71,23 @@ function formatTooltipLabel(
 
   if (interval === "day") {
     return new Intl.DateTimeFormat("ru-RU", {
-      day: "2-digit",
+      day: "numeric",
       month: "long",
       year: "numeric",
     }).format(start);
   }
 
   if (interval === "week") {
-    const startText = new Intl.DateTimeFormat("ru-RU", {
-      day: "2-digit",
+    const s = new Intl.DateTimeFormat("ru-RU", {
+      day: "numeric",
       month: "short",
     }).format(start);
-    const endText = new Intl.DateTimeFormat("ru-RU", {
-      day: "2-digit",
+    const e = new Intl.DateTimeFormat("ru-RU", {
+      day: "numeric",
       month: "short",
       year: "numeric",
     }).format(end);
-    return `${startText} - ${endText}`;
+    return `${s} — ${e}`;
   }
 
   return new Intl.DateTimeFormat("ru-RU", {
@@ -90,29 +96,66 @@ function formatTooltipLabel(
   }).format(start);
 }
 
-function formatCompactCurrency(value: number, currency?: string) {
-  try {
-    return new Intl.NumberFormat("ru-RU", {
-      style: "currency",
-      currency: currency ?? "KZT",
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(value);
-  } catch {
-    return new Intl.NumberFormat("ru-RU", {
-      style: "currency",
-      currency: "KZT",
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(value);
-  }
+function formatAxisY(value: number, currency?: string): string {
+  const sym =
+    currency === "USD" ? "$" : currency === "EUR" ? "€" : "₸";
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000)
+    return `${sym}${(value / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000)
+    return `${sym}${(value / 1_000).toFixed(0)}K`;
+  return `${sym}${value.toFixed(0)}`;
 }
+
+// ── Custom tooltip ────────────────────────────────────────────────────────────
+
+type ChartPoint = {
+  label: string;
+  periodStart: string;
+  periodEnd: string;
+  total: number | null;
+};
+
+function BalanceTooltip({
+  active,
+  payload,
+  currency,
+  interval,
+}: TooltipProps<number, string> & {
+  currency?: string;
+  interval: BalanceHistoryInterval;
+}) {
+  if (!active || !payload?.length) return null;
+
+  const point = payload[0]?.payload as ChartPoint | undefined;
+  if (!point || point.total == null) return null;
+
+  const isNegative = point.total < 0;
+
+  return (
+    <div className="rounded-[10px] border border-[#E5E2D8] bg-white px-4 py-3 shadow-lg">
+      <p className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.06em] text-[#B5B0A8]">
+        {formatTooltipDate(point.periodStart, point.periodEnd, interval)}
+      </p>
+      <p
+        className={cn(
+          "font-mono text-[15px] font-semibold",
+          isNegative ? "text-red-500" : "text-[#111]",
+        )}
+      >
+        {formatCurrency(point.total, currency)}
+      </p>
+    </div>
+  );
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 const BalanceHistory = () => {
   const [interval, setInterval] = useState<BalanceHistoryInterval>("day");
   const { data, isLoading, isError } = useBalanceHistory(interval);
 
-  const chartData = data?.points
+  const chartData: ChartPoint[] = data?.points
     ? data.points.map((point) => ({
         label: formatAxisLabel(point, interval),
         periodStart: point.periodStart,
@@ -121,16 +164,21 @@ const BalanceHistory = () => {
       }))
     : [];
 
-  const hasNumericPoints = chartData.some(
-    (point) => typeof point.total === "number",
-  );
+  const hasNumericPoints = chartData.some((p) => typeof p.total === "number");
+  const hasNegative = chartData.some((p) => (p.total ?? 0) < 0);
+
+  // pick stroke / gradient based on whether any point is negative
+  const strokeColor = hasNegative ? "#f43f5e" : STROKE;
+  const gradStart = hasNegative
+    ? "rgba(244,63,94,0.18)"
+    : "rgba(16,185,129,0.18)";
 
   const renderContent = () => {
     if (isLoading) {
       return (
         <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
-          <HashLoader size={32} color="hsl(var(--muted-foreground))" />
-          <span>Загрузка динамики...</span>
+          <HashLoader size={28} color="hsl(var(--muted-foreground))" />
+          <span className="text-xs">Загрузка динамики...</span>
         </div>
       );
     }
@@ -154,7 +202,7 @@ const BalanceHistory = () => {
     if (!hasNumericPoints) {
       return (
         <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-          Недостаточно данных для расчета единой валютной динамики
+          Недостаточно данных для расчёта динамики
         </div>
       );
     }
@@ -163,63 +211,82 @@ const BalanceHistory = () => {
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={chartData}
-          margin={{
-            top: 16,
-            right: 6,
-            left: 0,
-            bottom: 0,
-          }}
-          onContextMenu={(_, e) => e.preventDefault()}
+          margin={{ top: 20, right: 16, left: -8, bottom: 0 }}
         >
           <defs>
-            <linearGradient id="balanceHistoryFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
+            <linearGradient id={GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={gradStart} stopOpacity={1} />
+              <stop offset="100%" stopColor={gradStart} stopOpacity={0} />
             </linearGradient>
           </defs>
 
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="label" minTickGap={24} />
-          <YAxis
-            width={82}
-            tickFormatter={(value) =>
-              formatCompactCurrency(Number(value), data?.currency)
-            }
+          <CartesianGrid
+            strokeDasharray="4 4"
+            vertical={false}
+            stroke="#F0EDE7"
           />
-          <Tooltip
-            formatter={(value: number | string | undefined) => {
-              const numericValue =
-                typeof value === "number" ? value : Number(value);
-              if (!Number.isFinite(numericValue))
-                return ["N/A", "Баланс"] as const;
-              return [
-                formatCurrency(numericValue, data?.currency),
-                "Баланс",
-              ] as const;
-            }}
-            labelFormatter={(_, payload) => {
-              const payloadItem = payload?.[0]?.payload as
-                | { periodStart?: string; periodEnd?: string }
-                | undefined;
-              if (!payloadItem?.periodStart || !payloadItem?.periodEnd) {
-                return "";
-              }
 
-              return formatTooltipLabel(
-                payloadItem.periodStart,
-                payloadItem.periodEnd,
-                interval,
-              );
+          <XAxis
+            dataKey="label"
+            tick={{
+              fill: "#B5B0A8",
+              fontSize: 10,
+              fontFamily: "var(--font-mono, monospace)",
+            }}
+            tickLine={false}
+            axisLine={false}
+            minTickGap={36}
+            dy={4}
+          />
+
+          <YAxis
+            width={62}
+            tick={{
+              fill: "#B5B0A8",
+              fontSize: 10,
+              fontFamily: "var(--font-mono, monospace)",
+            }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v) => formatAxisY(Number(v), data?.currency)}
+            tickCount={5}
+          />
+
+          {hasNegative && (
+            <ReferenceLine
+              y={0}
+              stroke="#E5E2D8"
+              strokeWidth={1.5}
+              strokeDasharray="0"
+            />
+          )}
+
+          <Tooltip
+            content={
+              <BalanceTooltip currency={data?.currency} interval={interval} />
+            }
+            cursor={{
+              stroke: "#E5E2D8",
+              strokeWidth: 1,
+              strokeDasharray: "4 4",
             }}
           />
+
           <Area
             type="monotone"
             dataKey="total"
-            stroke="#10b981"
+            stroke={strokeColor}
             strokeWidth={2}
-            fill="url(#balanceHistoryFill)"
+            fill={`url(#${GRADIENT_ID})`}
             connectNulls
             isAnimationActive={false}
+            dot={false}
+            activeDot={{
+              r: 4.5,
+              fill: strokeColor,
+              stroke: "white",
+              strokeWidth: 2,
+            }}
           />
         </AreaChart>
       </ResponsiveContainer>
@@ -259,17 +326,15 @@ const BalanceHistory = () => {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 px-3 pb-3 pt-3">{renderContent()}</div>
+      <div className="min-h-0 flex-1 px-2 pb-4 pt-2">{renderContent()}</div>
 
       {data?.fxUnavailable ? (
         <p className="border-t border-[#EDEAE4] px-6 py-2.5 text-xs text-[#AAA49C]">
-          FX недоступен. График показан в fallback-режиме без полной конвертации
-          валют.
+          FX недоступен — график показан без полной конвертации валют.
         </p>
       ) : data?.fxStale ? (
         <p className="border-t border-[#EDEAE4] px-6 py-2.5 text-xs text-[#AAA49C]">
-          Используются последние сохраненные курсы FX. Данные могут быть не
-          актуальны.
+          Используются последние сохранённые курсы FX.
         </p>
       ) : null}
     </Tabs>

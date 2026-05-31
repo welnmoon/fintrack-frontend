@@ -20,7 +20,7 @@ export function Sidebar() {
           <div
             className={cn("px-2", isSidebarCollapsed && "flex justify-center")}
           >
-            <FintrackLogo />
+            <FintrackLogo isMobileSidebarOpen={isSidebarCollapsed} />
           </div>
           <Separator className="my-4" />
           <SidebarNav isCollapsed={isSidebarCollapsed} />
@@ -30,7 +30,7 @@ export function Sidebar() {
       <Sheet open={isMobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
         <SheetContent side="left" className="w-[18rem] p-4 sm:max-w-[18rem]">
           <SheetTitle className="mb-4">
-            <FintrackLogo />
+            <FintrackLogo isMobileSidebarOpen={isSidebarCollapsed} />
           </SheetTitle>
           <Separator className="mb-4" />
           <SidebarNav onNavigate={() => setMobileSidebarOpen(false)} />
