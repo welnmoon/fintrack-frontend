@@ -18,6 +18,7 @@ export const createTransactionSchema = z
         (value) => !Number.isNaN(new Date(value).getTime()),
         "Некорректная дата",
       ),
+    accountSum: z.coerce.number().optional(),
 
     note: z.string().max(200, "Слишком длинный комментарий").optional(),
 

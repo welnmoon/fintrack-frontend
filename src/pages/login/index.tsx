@@ -54,8 +54,6 @@ export function LoginPage() {
   const { data: userData, isLoading: isGetUserLoading } = useGetUser();
   const { mutate, isPending, isSuccess, error } = useLogin();
 
-  if (userData || isSuccess) return <Navigate to={ROUTES.app} />;
-
   const isBusy = isPending || isGetUserLoading;
 
   const onSubmit = (values: LoginSchemaType) => {
@@ -83,6 +81,8 @@ export function LoginPage() {
     btn.appendChild(ripple);
     setTimeout(() => ripple.remove(), 600);
   }, []);
+
+  if (userData || isSuccess) return <Navigate to={ROUTES.app} />;
 
   return (
     <div

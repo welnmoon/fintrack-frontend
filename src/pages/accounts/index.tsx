@@ -77,8 +77,12 @@ function ChipDecoration() {
 
 /* ─── Summary card ─── */
 function SummaryCard({ accounts }: { accounts: GetAccount[] }) {
-  const total = accounts.reduce((s, a) => s + Number(a.balance), 0);
-  const currency = accounts[0]?.currency ?? "KZT";
+  const total = accounts.reduce(
+    (s, a) => s + Number(a.convertedBalance ?? a.balance),
+    0,
+  );
+  const currency =
+    accounts[0]?.convertedCurrency ?? accounts[0]?.currency ?? "KZT";
 
   return (
     <div className="overflow-hidden rounded-2xl border border-[#E5E2D8] bg-white px-6 py-5">
@@ -97,7 +101,8 @@ function SummaryCard({ accounts }: { accounts: GetAccount[] }) {
       {/* Distribution bar */}
       <div className="mb-2 flex h-[7px] gap-[2px] overflow-hidden rounded-full">
         {accounts.map((a, i) => {
-          const pct = total > 0 ? (Number(a.balance) / total) * 100 : 0;
+          const converted = Number(a.convertedBalance ?? a.balance);
+          const pct = total > 0 ? (converted / total) * 100 : 0;
           const isFirst = i === 0;
           const isLast = i === accounts.length - 1;
           return (
@@ -122,7 +127,10 @@ function SummaryCard({ accounts }: { accounts: GetAccount[] }) {
       {/* Legend */}
       <div className="flex flex-wrap gap-4">
         {accounts.map((a) => (
-          <div key={a.id} className="flex items-center gap-1.5 text-[11px] text-[#B0ADA4]">
+          <div
+            key={a.id}
+            className="flex items-center gap-1.5 text-[11px] text-[#B0ADA4]"
+          >
             <span
               className="h-2 w-2 flex-shrink-0 rounded-[2px]"
               style={{ background: bgColor(a.backgroundKey) }}
@@ -163,7 +171,9 @@ function AccountCard({
 
       {/* Bottom */}
       <div className="relative z-10">
-        <p className="text-[16px] font-semibold leading-tight">{account.name}</p>
+        <p className="text-[16px] font-semibold leading-tight">
+          {account.name}
+        </p>
         <p className="mb-1.5 font-mono text-[10px] opacity-60">
           {account.accountNumber ?? "—"}
         </p>
@@ -488,7 +498,7 @@ export function AccountsPage() {
 
   return (
     <PageContainer>
-      <PageHeader
+      {/* <PageHeader
         title="Счета"
         description="Визуальная структура баланса по счетам."
         actions={
@@ -508,7 +518,7 @@ export function AccountsPage() {
             Добавить счёт
           </button>
         }
-      />
+      /> */}
 
       {/* Summary */}
       {!isLoading && !isError && accounts && accounts.length > 0 && (
@@ -532,7 +542,11 @@ export function AccountsPage() {
           !isError &&
           accounts &&
           accounts.map((account) => (
-            <AccountCard key={account.id} account={account} accounts={accounts} />
+            <AccountCard
+              key={account.id}
+              account={account}
+              accounts={accounts}
+            />
           ))}
 
         {!isLoading && !isError && (

@@ -6,6 +6,9 @@ import type { GetAccount } from "../model/types.api";
 export const useGetAccounts = () => {
   return useQuery({
     queryKey: ["accounts"],
+    refetchOnMount: "always",
+    refetchOnReconnect: true,
+    refetchOnWindowFocus: true,
     queryFn: async () =>
       httpClient<GetAccount[]>(accountApi.getAccounts(), {
         method: "GET",

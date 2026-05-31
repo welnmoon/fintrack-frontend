@@ -60,7 +60,23 @@ const getDefaultOccurredAtValue = () => {
 
 const toOccurredAtIso = (value: string) => {
   const [year, month, day] = value.split("-").map(Number);
-  return new Date(year, month - 1, day, 12, 0, 0, 0).toISOString();
+  const now = new Date();
+  const isToday =
+    year === now.getFullYear() &&
+    month === now.getMonth() + 1 &&
+    day === now.getDate();
+  const date = isToday
+    ? new Date(
+        year,
+        month - 1,
+        day,
+        now.getHours(),
+        now.getMinutes(),
+        now.getSeconds(),
+        0,
+      )
+    : new Date(year, month - 1, day, 12, 0, 0, 0);
+  return date.toISOString();
 };
 
 const getDefaultValues = (

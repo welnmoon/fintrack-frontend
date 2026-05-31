@@ -5,9 +5,9 @@ import type { CreateTransactionType } from "../model/schema";
 import { dashboardQueryKey } from "@/features/get-dashboard/api/use-get-dashboard";
 import { balanceHistoryQueryKey } from "@/features/get-dashboard/api/use-balance-history";
 import type { Transaction } from "@/entities/transaction";
-import type { CurrencyCode } from "@/shared/model/currency/schema";
 import { userCategoriesQueryKey } from "@/entities/category/api/use-get-categories";
 import type { UserCategory } from "@/entities/category/model/types.api";
+import type { GetAccount } from "@/entities/account/model/types.api";
 
 export type OptimisticTransaction = Omit<
   Transaction,
@@ -31,24 +31,26 @@ export const useCreateTransaction = () => {
         body: JSON.stringify(dto),
       }),
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["transactions"] });
-      await qc.invalidateQueries({ queryKey: ["accounts"] });
-      await qc.invalidateQueries({ queryKey: [dashboardQueryKey] });
-      await qc.invalidateQueries({ queryKey: [balanceHistoryQueryKey] });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["transactions"] }),
+        qc.invalidateQueries({ queryKey: ["accounts"] }),
+        qc.invalidateQueries({ queryKey: [dashboardQueryKey] }),
+        qc.invalidateQueries({ queryKey: [balanceHistoryQueryKey] }),
+      ]);
     },
     onMutate: async (dto) => {
-      qc.cancelQueries({ queryKey: ["transactions"] });
+      await qc.cancelQueries({ queryKey: ["transactions"] });
+      await qc.cancelQueries({ queryKey: ["accounts"] });
 
       const now = new Date();
 
-      type Account = { id: string; currency: CurrencyCode };
-
       const prevTransactions = qc.getQueryData<Transaction[]>(["transactions"]);
-      const accounts = qc.getQueryData<Account[]>(["accounts"]);
-      const categories =
-        qc.getQueryData<UserCategory[]>([userCategoriesQueryKey]);
+      const prevAccounts = qc.getQueryData<GetAccount[]>(["accounts"]);
+      const categories = qc.getQueryData<UserCategory[]>([
+        userCategoriesQueryKey,
+      ]);
       const currency =
-        accounts?.find((a) => a.id === dto.accountId)?.currency ?? "USD";
+        prevAccounts?.find((a) => a.id === dto.accountId)?.currency ?? "USD";
       const category =
         categories?.find((item) => item.id === dto.categoryId) ?? null;
 
@@ -79,15 +81,30 @@ export const useCreateTransaction = () => {
         return [optimisticTx, ...list];
       });
 
-      return { prevTransactions };
+      qc.setQueryData<GetAccount[]>(["accounts"], (old) => {
+        if (!old) return old;
+
+        return old.map((acc: GetAccount) => {
+          if (acc.id !== dto.accountId) return acc;
+
+          const amount = Number(dto.amount);
+          const nextBalance =
+            dto.type === "INCOME"
+              ? acc.balance + amount
+              : dto.type === "EXPENSE"
+                ? acc.balance - amount
+                : amount;
+
+          return { ...acc, balance: nextBalance };
+        });
+      });
+
+      return { prevTransactions, prevAccounts };
     },
     onError: (_err, _dto, ctx) => {
       if (!ctx) return;
       qc.setQueryData(["transactions"], ctx.prevTransactions);
-    },
-
-    onSettled: async () => {
-      await qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.setQueryData(["accounts"], ctx.prevAccounts);
     },
   });
 };

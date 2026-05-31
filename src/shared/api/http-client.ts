@@ -48,6 +48,9 @@ export const httpClient = async <T>(
       "Content-Type": "application/json",
       ...options.headers,
     },
+    cache:
+      options.cache ??
+      (options.method?.toUpperCase() === "GET" ? "no-store" : undefined),
     ...options,
     credentials: options.credentials ?? "include",
   });

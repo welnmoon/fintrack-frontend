@@ -12,6 +12,8 @@ export interface GetAccount {
   accountNumber: string | null;
   initialBalance: number;
   balance: number;
+  convertedBalance?: number;
+  convertedCurrency?: CurrencyCode;
 }
 
 export interface GetAccountOptions {
