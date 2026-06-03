@@ -51,7 +51,11 @@ export function RegisterPage() {
     mode: "onChange",
   });
 
-  const { data: userData, isLoading: isGetUserLoading } = useGetUser();
+  const {
+    data: userData,
+    isLoading: isGetUserLoading,
+    isError: isGetUserError,
+  } = useGetUser();
   const { mutate, isPending, isSuccess, error } = useRegister();
 
   const isBusy = isPending || isGetUserLoading;
@@ -82,7 +86,8 @@ export function RegisterPage() {
     setTimeout(() => ripple.remove(), 600);
   }, []);
 
-  if (userData || isSuccess) return <Navigate to={ROUTES.app} />;
+  if ((userData && !isGetUserError) || isSuccess)
+    return <Navigate to={ROUTES.app} />;
 
   return (
     <div

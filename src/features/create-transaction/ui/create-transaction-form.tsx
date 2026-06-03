@@ -13,6 +13,7 @@ import {
 import { createElement, useEffect, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useGetAccountOptions } from "@/entities/account/api/use-get-account-options";
+import { useGetUser } from "@/entities/user/api/use-get-user";
 import { getAccountBackgroundClassName } from "@/entities/account/lib/account-backgrounds";
 import { useGetCategories } from "@/entities/category/api/use-get-categories";
 import { HashLoader } from "react-spinners";
@@ -130,6 +131,7 @@ const CreateTransactionForm = ({
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const advancedRef = useRef<HTMLDivElement>(null);
 
+  const { data: user } = useGetUser();
   const { data: accountOptions, isLoading: isAccountsLoading } =
     useGetAccountOptions();
   const { data: categories, isLoading: isCategoriesLoading } =
@@ -177,11 +179,16 @@ const CreateTransactionForm = ({
   useEffect(() => {
     if (!accountOptions || accountOptions.length === 0) return;
     if (form.getValues("accountId")) return;
-    form.setValue("accountId", accountOptions[0].id, {
+    const preferredAccountId = user?.defaultAccountId;
+    const defaultAccountId =
+      (preferredAccountId &&
+        accountOptions.find((item) => item.id === preferredAccountId)?.id) ||
+      accountOptions[0].id;
+    form.setValue("accountId", defaultAccountId, {
       shouldValidate: true,
       shouldDirty: false,
     });
-  }, [accountOptions, form]);
+  }, [accountOptions, form, user]);
 
   useEffect(() => {
     if (effectiveType === "EXPENSE") return;

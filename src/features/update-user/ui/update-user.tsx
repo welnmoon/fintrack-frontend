@@ -2,8 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { User } from "@/entities/user/model/types.api";
-import { CURRENCY_CODES } from "@/shared/model/currency/schema";
-import { Button, FormSelect } from "@/shared/ui";
+import { Button } from "@/shared/ui";
 import FormInput from "@/shared/ui/components/form-input";
 import { useUpdateUser } from "../api/use-update-user";
 import {
@@ -15,16 +14,10 @@ type Props = {
   user: User;
 };
 
-const currencyOptions = CURRENCY_CODES.map((currency) => ({
-  value: currency,
-  label: currency,
-}));
-
 const getDefaultValues = (user: User): UpdateUserSchemaType => ({
   email: user.email,
   firstName: user.firstName ?? "",
   lastName: user.lastName ?? "",
-  defaultCurrency: user.defaultCurrency ?? "KZT",
 });
 
 const UpdateUserForm = ({ user }: Props) => {
@@ -47,7 +40,6 @@ const UpdateUserForm = ({ user }: Props) => {
       email: values.email?.trim() || undefined,
       firstName: values.firstName?.trim() || undefined,
       lastName: values.lastName?.trim() || undefined,
-      defaultCurrency: values.defaultCurrency,
     });
   };
 
@@ -77,14 +69,6 @@ const UpdateUserForm = ({ user }: Props) => {
         type="email"
         placeholder="you@example.com"
         containerClassName="md:col-span-2"
-      />
-
-      <FormSelect
-        control={form.control}
-        name="defaultCurrency"
-        label="Валюта по умолчанию"
-        id="update-user-default-currency"
-        options={currencyOptions}
       />
 
       <div className="md:col-span-2">

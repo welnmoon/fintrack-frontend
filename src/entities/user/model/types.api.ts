@@ -7,4 +7,5 @@ export interface User {
   firstName: string | null;
   lastName: string | null;
   defaultCurrency?: CurrencyCode | null;
+  defaultAccountId?: string | null;
 }

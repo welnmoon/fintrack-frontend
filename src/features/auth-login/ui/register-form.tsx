@@ -21,7 +21,11 @@ const RegisterForm = () => {
     mode: "onChange",
   });
 
-  const { data: userData, isLoading: isGetUserLoading } = useGetUser();
+  const {
+    data: userData,
+    isLoading: isGetUserLoading,
+    isError: isGetUserError,
+  } = useGetUser();
   const { mutate, isPending, isSuccess, error } = useRegister();
 
   if (isGetUserLoading) {
@@ -38,7 +42,7 @@ const RegisterForm = () => {
     );
   }
 
-  if (userData) {
+  if (userData && !isGetUserError) {
     return <Navigate to={ROUTES.app} />;
   }
 

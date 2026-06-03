@@ -9,6 +9,8 @@ export const updateUserSchema = z.object({
   lastName: z.string().optional(),
 
   defaultCurrency: z.enum(CURRENCY_CODES).optional(),
+
+  defaultAccountId: z.string().nullable().optional(),
 });
 
 export type UpdateUserSchemaType = z.infer<typeof updateUserSchema>;

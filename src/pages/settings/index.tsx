@@ -2,6 +2,7 @@ import { APP_THEMES, useTheme } from "@/app/providers";
 import { useGetUser } from "@/entities/user/api/use-get-user";
 import { useLogout } from "@/features/auth-login/api/use-logout";
 import LoginForm from "@/features/auth-login/ui/login-form";
+import UpdateUserCurrencyForm from "@/features/update-user/ui/update-user-currency";
 import UpdateUserForm from "@/features/update-user/ui/update-user";
 import { cn } from "@/shared/lib";
 import { Avatar, AvatarFallback, Switch } from "@/shared/ui";
@@ -377,6 +378,24 @@ export function SettingsPage() {
          ══════════════════════════════ */}
       {activeTab === "general" && (
         <div className="max-w-2xl">
+          {isUserLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <HashLoader size={28} color="hsl(var(--foreground))" />
+            </div>
+          ) : isUserError ? (
+            <p className="mb-4 text-[13px] text-destructive">
+              Ошибка:{" "}
+              {userError instanceof Error
+                ? userError.message
+                : "Неизвестная ошибка"}
+            </p>
+          ) : user ? (
+            <div className="mb-5 overflow-hidden rounded-[20px] border border-border bg-card px-6 py-5">
+              <SectionLabel>По умолчанию</SectionLabel>
+              <UpdateUserCurrencyForm user={user} />
+            </div>
+          ) : null}
+
           <SectionLabel>Поведение интерфейса</SectionLabel>
           <div className="overflow-hidden rounded-[20px] border border-border bg-card">
             <SettingRow

@@ -51,7 +51,11 @@ export function LoginPage() {
     mode: "onChange",
   });
 
-  const { data: userData, isLoading: isGetUserLoading } = useGetUser();
+  const {
+    data: userData,
+    isLoading: isGetUserLoading,
+    isError: isGetUserError,
+  } = useGetUser();
   const { mutate, isPending, isSuccess, error } = useLogin();
 
   const isBusy = isPending || isGetUserLoading;
@@ -82,7 +86,8 @@ export function LoginPage() {
     setTimeout(() => ripple.remove(), 600);
   }, []);
 
-  if (userData || isSuccess) return <Navigate to={ROUTES.app} />;
+  if ((userData && !isGetUserError) || isSuccess)
+    return <Navigate to={ROUTES.app} />;
 
   return (
     <div

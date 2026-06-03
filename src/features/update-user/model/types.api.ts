@@ -8,4 +8,5 @@ export type UpdateUserDto = {
   createdAt: Date;
   updatedAt: Date;
   defaultCurrency: CurrencyCode;
+  defaultAccountId: string | null;
 };

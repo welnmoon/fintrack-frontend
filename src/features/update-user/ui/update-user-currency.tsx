@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useGetAccountOptions } from "@/entities/account/api/use-get-account-options";
 import type { User } from "@/entities/user/model/types.api";
 import { CURRENCY_CODES } from "@/shared/model/currency/schema";
 import { Button, FormSelect } from "@/shared/ui";
@@ -14,14 +15,14 @@ type Props = {
   user: User;
 };
 
+const NO_DEFAULT_ACCOUNT = "__none__";
+
 const updateUserCurrencySchema = updateUserSchema.pick({
   defaultCurrency: true,
+  defaultAccountId: true,
 });
 
-type UpdateUserCurrencySchemaType = Pick<
-  UpdateUserSchemaType,
-  "defaultCurrency"
->;
+type UpdateUserCurrencySchemaType = Pick<UpdateUserSchemaType, "defaultCurrency" | "defaultAccountId">;
 
 const currencyOptions = CURRENCY_CODES.map((currency) => ({
   value: currency,
@@ -30,9 +31,11 @@ const currencyOptions = CURRENCY_CODES.map((currency) => ({
 
 const getDefaultValues = (user: User): UpdateUserCurrencySchemaType => ({
   defaultCurrency: user.defaultCurrency ?? "KZT",
+  defaultAccountId: user.defaultAccountId ?? "",
 });
 
 const UpdateUserCurrencyForm = ({ user }: Props) => {
+  const { data: accountOptionsData } = useGetAccountOptions();
   const form = useForm<UpdateUserCurrencySchemaType>({
     defaultValues: getDefaultValues(user),
     resolver: zodResolver(updateUserCurrencySchema),
@@ -50,12 +53,23 @@ const UpdateUserCurrencyForm = ({ user }: Props) => {
 
     mutate({
       defaultCurrency: values.defaultCurrency,
+      defaultAccountId: values.defaultAccountId?.trim()
+        ? values.defaultAccountId
+        : null,
     });
   };
 
+  const accountOptions = [
+    { value: NO_DEFAULT_ACCOUNT, label: "Не выбрано" },
+    ...(accountOptionsData ?? []).map((account) => ({
+      value: account.id,
+      label: `${account.name} (${account.currency})`,
+    })),
+  ];
+
   return (
     <form
-      className="grid gap-3 md:grid-cols-[1fr_auto]"
+      className="grid gap-3 md:grid-cols-2"
       onSubmit={form.handleSubmit(onSubmit)}
     >
       <FormSelect
@@ -66,9 +80,25 @@ const UpdateUserCurrencyForm = ({ user }: Props) => {
         options={currencyOptions}
       />
 
-      <div className="md:self-end">
+      <FormSelect
+        control={form.control}
+        name="defaultAccountId"
+        label="Счёт по умолчанию"
+        id="profile-default-account"
+        options={accountOptions}
+        valueFromField={(value) =>
+          typeof value === "string" && value.length > 0
+            ? value
+            : NO_DEFAULT_ACCOUNT
+        }
+        fieldFromValue={(value) =>
+          value === NO_DEFAULT_ACCOUNT ? "" : value
+        }
+      />
+
+      <div className="md:col-span-2">
         <Button type="submit" disabled={isPending} className="w-full md:w-auto">
-          {isPending ? "Сохраняю..." : "Сохранить валюту"}
+          {isPending ? "Сохраняю..." : "Сохранить общие"}
         </Button>
       </div>
 

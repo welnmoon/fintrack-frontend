@@ -18,7 +18,11 @@ const LoginForm = () => {
     resolver: zodResolver(loginSchema),
     mode: "onChange",
   });
-  const { data: userData, isLoading: isGetUserLoading } = useGetUser();
+  const {
+    data: userData,
+    isLoading: isGetUserLoading,
+    isError: isGetUserError,
+  } = useGetUser();
   const { mutate, isPending, isSuccess, error } = useLogin();
 
   if (isGetUserLoading) {
@@ -31,7 +35,7 @@ const LoginForm = () => {
     );
   }
 
-  if (userData) {
+  if (userData && !isGetUserError) {
     return <Navigate to={ROUTES.app} />;
   }
 
