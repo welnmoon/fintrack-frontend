@@ -18,7 +18,7 @@ import {
 } from "@/features/accounts/create-account/model/schema";
 import { cn } from "@/shared/lib";
 import { Skeleton } from "@/shared/ui";
-import { PageContainer, PageHeader } from "@/widgets/page-shell";
+import { PageContainer } from "@/widgets/page-shell";
 
 /* ─── Background solid colour for legend & distribution bar ─── */
 const BG_SOLID: Record<string, string> = {

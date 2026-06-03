@@ -5,7 +5,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
-  type TooltipProps,
+  type TooltipContentProps,
   XAxis,
   YAxis,
 } from "recharts";
@@ -121,7 +121,7 @@ function BalanceTooltip({
   payload,
   currency,
   interval,
-}: TooltipProps<number, string> & {
+}: Pick<TooltipContentProps<number, string>, "active" | "payload"> & {
   currency?: string;
   interval: BalanceHistoryInterval;
 }) {
@@ -262,9 +262,14 @@ const BalanceHistory = () => {
           )}
 
           <Tooltip
-            content={
-              <BalanceTooltip currency={data?.currency} interval={interval} />
-            }
+            content={(props) => (
+              <BalanceTooltip
+                active={props.active}
+                payload={props.payload}
+                currency={data?.currency}
+                interval={interval}
+              />
+            )}
             cursor={{
               stroke: "#E5E2D8",
               strokeWidth: 1,

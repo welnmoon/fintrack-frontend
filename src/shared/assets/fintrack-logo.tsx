@@ -1,5 +1,3 @@
-import { APP_NAME } from "@/shared/const";
-
 export function FintrackLogo({
   isMobileSidebarOpen,
 }: {
