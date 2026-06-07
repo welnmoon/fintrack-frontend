@@ -200,7 +200,7 @@ export default function PieChartWithCustomizedLabel({
         </div>
 
         {/* category list — fills all remaining height */}
-        <div className="min-h-0 flex-1 overflow-y-auto border-t border-[#EDEAE4] lg:border-l lg:border-t-0">
+        <div className="min-h-[320px] overflow-y-auto border-t border-[#EDEAE4] lg:min-h-0 lg:flex-1 lg:border-l lg:border-t-0">
           <ul>
             {displayData.map((i) => {
               const pct = total > 0 ? (i.amount / total) * 100 : 0;

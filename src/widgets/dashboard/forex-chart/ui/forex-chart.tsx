@@ -46,13 +46,18 @@ type ForexSseSnapshot = {
 };
 
 export const FOREX_SYMBOL_OPTIONS = [
-  "EUR/USD",
-  "GBP/USD",
-  "USD/JPY",
-  "USD/KZT",
-  "EUR/KZT",
+  { symbol: "USD/KZT", baseCode: "US", quoteCode: "KZ" },
+  { symbol: "EUR/KZT", baseCode: "EU", quoteCode: "KZ" },
+  { symbol: "EUR/USD", baseCode: "EU", quoteCode: "US" },
+  { symbol: "GBP/USD", baseCode: "GB", quoteCode: "US" },
+  { symbol: "USD/JPY", baseCode: "US", quoteCode: "JP" },
+  { symbol: "USD/CNY", baseCode: "US", quoteCode: "CN" },
+  { symbol: "USD/CHF", baseCode: "US", quoteCode: "CH" },
+  { symbol: "AUD/USD", baseCode: "AU", quoteCode: "US" },
+  { symbol: "USD/CAD", baseCode: "US", quoteCode: "CA" },
+  { symbol: "NZD/USD", baseCode: "NZ", quoteCode: "US" },
 ] as const;
-type SymbolType = (typeof FOREX_SYMBOL_OPTIONS)[number];
+type SymbolType = (typeof FOREX_SYMBOL_OPTIONS)[number]["symbol"];
 
 const INTERVAL_OPTIONS: ForexInterval[] = [
   "1min",
@@ -104,6 +109,49 @@ type ThemePalette = {
   up: string;
   down: string;
 };
+
+function getForexPairMeta(symbol: SymbolType) {
+  return (
+    FOREX_SYMBOL_OPTIONS.find((item) => item.symbol === symbol) ??
+    FOREX_SYMBOL_OPTIONS[0]
+  );
+}
+
+function PairFlag({
+  code,
+  tone,
+}: {
+  code: string;
+  tone: "base" | "quote";
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex h-5 w-5 items-center justify-center rounded-full border text-[8px] font-bold tracking-[0.04em]",
+        tone === "base"
+          ? "border-[#D7D2C8] bg-[#F6F1E8] text-[#6F675D]"
+          : "border-[#D6E2EA] bg-[#EDF5FA] text-[#4F6C81]",
+      )}
+      aria-hidden="true"
+    >
+      {code}
+    </span>
+  );
+}
+
+function PairLabel({ symbol }: { symbol: SymbolType }) {
+  const meta = getForexPairMeta(symbol);
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className="inline-flex -space-x-1">
+        <PairFlag code={meta.baseCode} tone="base" />
+        <PairFlag code={meta.quoteCode} tone="quote" />
+      </span>
+      <span>{symbol}</span>
+    </span>
+  );
+}
 
 function readCssColor(
   variableName: string,
@@ -420,23 +468,24 @@ export default function PriceChart({
             <div className="flex flex-wrap items-center">
               {FOREX_SYMBOL_OPTIONS.map((item, index) => (
                 <button
-                  key={item}
+                  key={item.symbol}
                   type="button"
                   onClick={() => {
-                    if (item === selectedSymbol) return;
+                    if (item.symbol === selectedSymbol) return;
                     resetStreamState();
-                    setSelectedSymbol(item);
+                    setSelectedSymbol(item.symbol);
                   }}
                   className={cn(
-                    "h-7 border border-[#DDD9D1] px-3 font-mono text-[11px] font-medium tracking-[0.3px] text-[#AAA49C] transition-colors",
+                    "inline-flex h-7 items-center border border-[#DDD9D1] px-3 font-mono text-[11px] font-medium tracking-[0.3px] text-[#AAA49C] transition-colors",
                     index === 0 && "rounded-l-[7px]",
                     index === FOREX_SYMBOL_OPTIONS.length - 1
                       ? "rounded-r-[7px]"
                       : "border-r-0",
-                    selectedSymbol === item && "border-[#111] bg-[#111] text-white",
+                    selectedSymbol === item.symbol &&
+                      "border-[#111] bg-[#111] text-white",
                   )}
                 >
-                  {item}
+                  <PairLabel symbol={item.symbol} />
                 </button>
               ))}
             </div>
@@ -567,24 +616,24 @@ export default function PriceChart({
             <div className="flex flex-wrap items-center">
               {FOREX_SYMBOL_OPTIONS.map((item, index) => (
                 <button
-                  key={item}
+                  key={item.symbol}
                   type="button"
                   onClick={() => {
-                    if (item === selectedSymbol) return;
+                    if (item.symbol === selectedSymbol) return;
                     resetStreamState();
-                    setSelectedSymbol(item);
+                    setSelectedSymbol(item.symbol);
                   }}
                   className={cn(
-                    "h-7 border border-[#DDD9D1] px-3 font-mono text-[11px] font-medium tracking-[0.3px] text-[#AAA49C] transition-colors",
+                    "inline-flex h-7 items-center border border-[#DDD9D1] px-3 font-mono text-[11px] font-medium tracking-[0.3px] text-[#AAA49C] transition-colors",
                     index === 0 && "rounded-l-[7px]",
                     index === FOREX_SYMBOL_OPTIONS.length - 1
                       ? "rounded-r-[7px]"
                       : "border-r-0",
-                    selectedSymbol === item &&
+                    selectedSymbol === item.symbol &&
                       "border-[#111] bg-[#111] text-white",
                   )}
                 >
-                  {item}
+                  <PairLabel symbol={item.symbol} />
                 </button>
               ))}
             </div>
@@ -699,8 +748,8 @@ export default function PriceChart({
             </SelectTrigger>
             <SelectContent>
               {FOREX_SYMBOL_OPTIONS.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {item}
+                <SelectItem key={item.symbol} value={item.symbol}>
+                  <PairLabel symbol={item.symbol} />
                 </SelectItem>
               ))}
             </SelectContent>

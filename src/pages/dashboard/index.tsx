@@ -676,7 +676,7 @@ export function DashboardHomePage() {
               </div>
             </div>
 
-            <div className="flex h-[460px] flex-col">
+            <div className="flex h-[680px] flex-col md:h-[720px] xl:h-[460px]">
               <div className="border-b border-[#EDEAE4] px-6 py-4">
                 <div className="mb-0.5 text-[15px] font-semibold tracking-[-0.2px] text-[#111]">
                   Структура расходов
