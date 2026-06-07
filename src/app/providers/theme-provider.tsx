@@ -23,51 +23,15 @@ export const APP_THEMES = [
     preview: ["222 47% 11%", "222 32% 14%", "214 84% 64%"],
   },
   {
-    id: "midnight-blue",
-    name: "Midnight Blue",
-    description: "Глубокий синий с холодным контрастом для классического fintech.",
-    appearance: "dark",
-    preview: ["216 59% 10%", "214 42% 15%", "210 66% 57%"],
-  },
-  {
-    id: "slate-sage",
-    name: "Slate & Sage",
-    description: "Серо-зелёная тема с ощущением спокойствия и private banking.",
-    appearance: "dark",
-    preview: ["180 21% 14%", "168 22% 17%", "153 40% 52%"],
-  },
-  {
-    id: "warm-neutral",
-    name: "Warm Neutral",
-    description: "Тёплый кремовый интерфейс с премиальным, но спокойным характером.",
-    appearance: "light",
-    preview: ["38 38% 96%", "36 28% 88%", "37 35% 64%"],
-  },
-  {
-    id: "deep-charcoal",
-    name: "Deep Charcoal",
-    description: "Графитовая тема с янтарным акцентом для активного dashboard UI.",
-    appearance: "dark",
-    preview: ["0 0% 10%", "0 0% 18%", "38 91% 55%"],
-  },
-  {
-    id: "arctic",
-    name: "Arctic / Ice Blue",
-    description: "Светлая ледяная тема с технологичным настроением.",
-    appearance: "light",
-    preview: ["210 44% 96%", "206 54% 90%", "204 62% 45%"],
-  },
-  {
-    id: "monochrome",
-    name: "Monochrome",
-    description: "Высокий контраст в серой гамме с живым зелёным акцентом.",
-    appearance: "light",
-    preview: ["0 0% 96%", "0 0% 53%", "142 71% 45%"],
+    id: "system",
+    name: "System",
+    description: "Автоматически повторяет светлую или тёмную тему устройства.",
+    appearance: "system",
+    preview: ["210 25% 97%", "222 32% 14%", "214 84% 64%"],
   },
 ] as const;
 
 export type ThemeId = (typeof APP_THEMES)[number]["id"];
-type ThemeAppearance = (typeof APP_THEMES)[number]["appearance"];
 
 type ThemeContextValue = {
   theme: ThemeId;
@@ -81,8 +45,17 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 const isThemeId = (value: string): value is ThemeId =>
   APP_THEMES.some((theme) => theme.id === value);
 
-const getThemeAppearance = (themeId: ThemeId): ThemeAppearance =>
-  APP_THEMES.find((theme) => theme.id === themeId)?.appearance ?? "light";
+const getSystemAppearance = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+
+const getThemeAppearance = (themeId: ThemeId): "light" | "dark" => {
+  const appearance =
+    APP_THEMES.find((theme) => theme.id === themeId)?.appearance ?? "light";
+  return appearance === "system" ? getSystemAppearance() : appearance;
+};
 
 const readStoredTheme = (): ThemeId => {
   if (typeof window === "undefined") return DEFAULT_THEME;
@@ -101,7 +74,8 @@ const applyTheme = (themeId: ThemeId) => {
   const root = document.documentElement;
   const appearance = getThemeAppearance(themeId);
 
-  root.dataset.theme = themeId;
+  root.dataset.theme = appearance;
+  root.dataset.themeMode = themeId;
   root.style.colorScheme = appearance;
   root.classList.toggle("dark", appearance === "dark");
 };
@@ -121,6 +95,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } catch {
       // Ignore localStorage failures and keep theme in memory.
     }
+  }, [theme]);
+
+  useEffect(() => {
+    if (theme !== "system" || typeof window === "undefined") return;
+
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => applyTheme("system");
+
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
   }, [theme]);
 
   return (

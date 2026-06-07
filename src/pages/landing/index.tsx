@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
 import { ArrowRight, ArrowUpRight, Minus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { APP_NAME, APP_TAGLINE } from "@/shared/const";
 import { ROUTES } from "@/shared/config";
+import { useGetUser } from "@/entities/user/api/use-get-user";
 
 /* ─── Font injection ─── */
 const FontLink = () => (
@@ -281,6 +282,43 @@ const kpiItems = [
 ];
 
 export function LandingPage() {
+  const navigate = useNavigate();
+  const { data: user, isLoading } = useGetUser();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      // iOS fallback
+      (window.navigator as Navigator & { standalone?: boolean }).standalone ===
+        true;
+
+    if (!isStandalone || isLoading) return;
+
+    navigate(user ? ROUTES.app : ROUTES.login, { replace: true });
+  }, [isLoading, navigate, user]);
+
+  if (
+    typeof window !== "undefined" &&
+    (window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone ===
+        true) &&
+    isLoading
+  ) {
+    return null;
+  }
+
+  if (
+    typeof window !== "undefined" &&
+    (window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone ===
+        true) &&
+    !isLoading
+  ) {
+    return <Navigate to={user ? ROUTES.app : ROUTES.login} replace />;
+  }
+
   return (
     <>
       <FontLink />

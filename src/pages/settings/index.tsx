@@ -7,7 +7,7 @@ import UpdateUserForm from "@/features/update-user/ui/update-user";
 import { cn } from "@/shared/lib";
 import { Avatar, AvatarFallback, Switch } from "@/shared/ui";
 import { PageContainer, PageHeader } from "@/widgets/page-shell";
-import { Check, LogOut, MoonStar, SunMedium } from "lucide-react";
+import { Check, LaptopMinimal, LogOut, MoonStar, SunMedium } from "lucide-react";
 import { useState } from "react";
 import { HashLoader } from "react-spinners";
 
@@ -161,10 +161,16 @@ function ThemeCard({
         <span className="mt-0.5 flex shrink-0 items-center gap-1 rounded-full border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
           {item.appearance === "dark" ? (
             <MoonStar className="h-2.5 w-2.5" />
+          ) : item.appearance === "system" ? (
+            <LaptopMinimal className="h-2.5 w-2.5" />
           ) : (
             <SunMedium className="h-2.5 w-2.5" />
           )}
-          {item.appearance === "dark" ? "Dark" : "Light"}
+          {item.appearance === "dark"
+            ? "Dark"
+            : item.appearance === "system"
+              ? "System"
+              : "Light"}
         </span>
       </div>
     </button>
@@ -194,8 +200,11 @@ export function SettingsPage() {
   const displayName = [user?.firstName, user?.lastName]
     .filter(Boolean)
     .join(" ");
-  const initials =
-    (displayName || user?.email || "U").charAt(0).toUpperCase();
+  const initials = [user?.firstName, user?.lastName]
+    .filter(Boolean)
+    .map((part) => part?.trim().charAt(0).toUpperCase())
+    .join("")
+    .slice(0, 2) || (user?.email || "U").slice(0, 2).toUpperCase();
 
   return (
     <PageContainer>
@@ -323,10 +332,16 @@ export function SettingsPage() {
               <span className="flex items-center gap-1.5 rounded-full border border-border bg-muted/30 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
                 {activeTheme.appearance === "dark" ? (
                   <MoonStar className="h-3 w-3" />
+                ) : activeTheme.appearance === "system" ? (
+                  <LaptopMinimal className="h-3 w-3" />
                 ) : (
                   <SunMedium className="h-3 w-3" />
                 )}
-                {activeTheme.appearance === "dark" ? "Dark" : "Light"}
+                {activeTheme.appearance === "dark"
+                  ? "Dark"
+                  : activeTheme.appearance === "system"
+                    ? "System"
+                    : "Light"}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-5 px-6 py-5">
@@ -365,9 +380,8 @@ export function SettingsPage() {
               ))}
             </div>
             <p className="mt-3 text-[11px] text-muted-foreground">
-              Тема применяется мгновенно и сохраняется в браузере.
-              Изменения отображаются в шапке, боковой панели и элементах
-              интерфейса, использующих системные цвета.
+              Доступны только светлая, тёмная и системная темы. Выбор
+              применяется мгновенно и сохраняется в браузере.
             </p>
           </div>
         </div>

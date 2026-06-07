@@ -159,16 +159,24 @@ export default function PieChartWithCustomizedLabel({
       {/* main area */}
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* pie */}
-        <div className="flex shrink-0 items-center justify-center px-6 py-5 lg:w-[220px]">
-          <div className="relative h-[170px] w-[170px]">
+        <div className="flex shrink-0 flex-col items-center justify-center gap-3 px-6 py-5 lg:w-[240px]">
+          <div className="text-center">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-[#AAA49C]">
+              Общие расходы
+            </p>
+            <p className="mt-1 font-mono text-sm font-semibold text-[#111]">
+              {formatCurrency(total, currency)}
+            </p>
+          </div>
+          <div className="relative h-[190px] w-[190px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={displayData}
                   dataKey="amount"
                   nameKey="name"
-                  innerRadius={44}
-                  outerRadius={72}
+                  innerRadius={0}
+                  outerRadius={86}
                   labelLine={false}
                   label={makeIconLabel(getCategoryIcon)}
                   isAnimationActive={isAnimationActive}
@@ -186,16 +194,6 @@ export default function PieChartWithCustomizedLabel({
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-mono text-xs font-semibold text-[#111]">
-                {new Intl.NumberFormat("ru-RU", {
-                  maximumFractionDigits: 0,
-                }).format(total)}
-              </span>
-              <span className="mt-0.5 text-[9px] text-[#C0BCB4]">
-                расходы · ₸
-              </span>
-            </div>
           </div>
         </div>
 

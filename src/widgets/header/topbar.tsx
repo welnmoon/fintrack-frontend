@@ -2,6 +2,7 @@ import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useSidebarToggle } from "@/features/sidebar-toggle";
 import { APP_ROUTE_TITLES, ROUTES } from "@/shared/config";
+import { useGetUser } from "@/entities/user/api/use-get-user";
 import {
   Avatar,
   AvatarFallback,
@@ -16,9 +17,17 @@ import {
 
 export function Topbar() {
   const { pathname } = useLocation();
+  const { data: user } = useGetUser();
   const { isSidebarCollapsed, setMobileSidebarOpen, toggleSidebarCollapse } =
     useSidebarToggle();
   const pageTitle = APP_ROUTE_TITLES[pathname] ?? "Fintrack";
+  const initials = [user?.firstName, user?.lastName]
+    .filter(Boolean)
+    .map((part) => part?.trim().charAt(0).toUpperCase())
+    .join("")
+    .slice(0, 2) || (user?.email || "U").slice(0, 2).toUpperCase();
+  const displayName =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Пользователь";
 
   return (
     <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
@@ -60,15 +69,15 @@ export function Topbar() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-10 rounded-full px-2">
               <Avatar className="h-8 w-8 border">
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
-              <p className="font-medium">Пользователь</p>
+              <p className="font-medium">{displayName}</p>
               <p className="text-xs font-normal text-muted-foreground">
-                Аккаунт
+                {user?.email ?? "Аккаунт"}
               </p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

@@ -9,7 +9,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui";
-import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import {
+  AU,
+  CA,
+  CH,
+  CN,
+  EU,
+  GB,
+  JP,
+  KZ,
+  NZ,
+  US,
+} from "country-flag-icons/react/3x2";
+import {
+  startTransition,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   AreaSeries,
   CandlestickSeries,
@@ -58,6 +76,7 @@ export const FOREX_SYMBOL_OPTIONS = [
   { symbol: "NZD/USD", baseCode: "NZ", quoteCode: "US" },
 ] as const;
 type SymbolType = (typeof FOREX_SYMBOL_OPTIONS)[number]["symbol"];
+type CountryCode = "AU" | "CA" | "CH" | "CN" | "EU" | "GB" | "JP" | "KZ" | "NZ" | "US";
 
 const INTERVAL_OPTIONS: ForexInterval[] = [
   "1min",
@@ -110,6 +129,19 @@ type ThemePalette = {
   down: string;
 };
 
+const FLAG_COMPONENTS: Record<CountryCode, any> = {
+  AU,
+  CA,
+  CH,
+  CN,
+  EU,
+  GB,
+  JP,
+  KZ,
+  NZ,
+  US,
+};
+
 function getForexPairMeta(symbol: SymbolType) {
   return (
     FOREX_SYMBOL_OPTIONS.find((item) => item.symbol === symbol) ??
@@ -117,24 +149,20 @@ function getForexPairMeta(symbol: SymbolType) {
   );
 }
 
-function PairFlag({
-  code,
-  tone,
-}: {
-  code: string;
-  tone: "base" | "quote";
-}) {
+function PairFlag({ code, tone }: { code: CountryCode; tone: "base" | "quote" }) {
+  const Flag = FLAG_COMPONENTS[code];
+
   return (
     <span
       className={cn(
-        "inline-flex h-5 w-5 items-center justify-center rounded-full border text-[8px] font-bold tracking-[0.04em]",
+        "inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded-full border shadow-[0_1px_2px_rgba(17,17,17,0.08)]",
         tone === "base"
-          ? "border-[#D7D2C8] bg-[#F6F1E8] text-[#6F675D]"
-          : "border-[#D6E2EA] bg-[#EDF5FA] text-[#4F6C81]",
+          ? "border-[#D7D2C8] bg-[#F6F1E8]"
+          : "border-[#D6E2EA] bg-[#EDF5FA]",
       )}
       aria-hidden="true"
     >
-      {code}
+      <Flag className="h-full w-full object-cover" />
     </span>
   );
 }
@@ -150,6 +178,31 @@ function PairLabel({ symbol }: { symbol: SymbolType }) {
       </span>
       <span>{symbol}</span>
     </span>
+  );
+}
+
+function PairSelect({
+  value,
+  onChange,
+  triggerClassName,
+}: {
+  value: SymbolType;
+  onChange: (value: SymbolType) => void;
+  triggerClassName?: string;
+}) {
+  return (
+    <Select value={value} onValueChange={(next) => onChange(next as SymbolType)}>
+      <SelectTrigger className={cn("w-[190px]", triggerClassName)}>
+        <SelectValue placeholder="Пара" />
+      </SelectTrigger>
+      <SelectContent>
+        {FOREX_SYMBOL_OPTIONS.map((item) => (
+          <SelectItem key={item.symbol} value={item.symbol}>
+            <PairLabel symbol={item.symbol} />
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -464,31 +517,15 @@ export default function PriceChart({
         {/* ── Controls bar ── */}
         <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#E5E2D8] bg-[#FAFAF7] px-6 py-3">
           <div className="flex flex-wrap items-center gap-3">
-            {/* Symbol pills */}
-            <div className="flex flex-wrap items-center">
-              {FOREX_SYMBOL_OPTIONS.map((item, index) => (
-                <button
-                  key={item.symbol}
-                  type="button"
-                  onClick={() => {
-                    if (item.symbol === selectedSymbol) return;
-                    resetStreamState();
-                    setSelectedSymbol(item.symbol);
-                  }}
-                  className={cn(
-                    "inline-flex h-7 items-center border border-[#DDD9D1] px-3 font-mono text-[11px] font-medium tracking-[0.3px] text-[#AAA49C] transition-colors",
-                    index === 0 && "rounded-l-[7px]",
-                    index === FOREX_SYMBOL_OPTIONS.length - 1
-                      ? "rounded-r-[7px]"
-                      : "border-r-0",
-                    selectedSymbol === item.symbol &&
-                      "border-[#111] bg-[#111] text-white",
-                  )}
-                >
-                  <PairLabel symbol={item.symbol} />
-                </button>
-              ))}
-            </div>
+            <PairSelect
+              value={selectedSymbol}
+              onChange={(next) => {
+                if (next === selectedSymbol) return;
+                resetStreamState();
+                setSelectedSymbol(next);
+              }}
+              triggerClassName="h-8 min-w-[210px] border-[#DDD9D1] bg-white"
+            />
 
             <div className="h-5 w-px bg-[#E5E2D8]" />
 
@@ -613,30 +650,15 @@ export default function PriceChart({
       <div className={cn("w-full", className)}>
         <div className="flex flex-col gap-3 border-b border-[#EDEAE4] px-6 py-2.5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
-            <div className="flex flex-wrap items-center">
-              {FOREX_SYMBOL_OPTIONS.map((item, index) => (
-                <button
-                  key={item.symbol}
-                  type="button"
-                  onClick={() => {
-                    if (item.symbol === selectedSymbol) return;
-                    resetStreamState();
-                    setSelectedSymbol(item.symbol);
-                  }}
-                  className={cn(
-                    "inline-flex h-7 items-center border border-[#DDD9D1] px-3 font-mono text-[11px] font-medium tracking-[0.3px] text-[#AAA49C] transition-colors",
-                    index === 0 && "rounded-l-[7px]",
-                    index === FOREX_SYMBOL_OPTIONS.length - 1
-                      ? "rounded-r-[7px]"
-                      : "border-r-0",
-                    selectedSymbol === item.symbol &&
-                      "border-[#111] bg-[#111] text-white",
-                  )}
-                >
-                  <PairLabel symbol={item.symbol} />
-                </button>
-              ))}
-            </div>
+            <PairSelect
+              value={selectedSymbol}
+              onChange={(next) => {
+                if (next === selectedSymbol) return;
+                resetStreamState();
+                setSelectedSymbol(next);
+              }}
+              triggerClassName="h-8 min-w-[210px] border-[#DDD9D1] bg-white"
+            />
 
             <div className="h-5 w-px bg-[#EDEAE4]" />
 
@@ -736,24 +758,13 @@ export default function PriceChart({
     <div className={cn("w-full space-y-4", className)}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-          <Select
+          <PairSelect
             value={selectedSymbol}
-            onValueChange={(value) => {
+            onChange={(next) => {
               resetStreamState();
-              setSelectedSymbol(value as SymbolType);
+              setSelectedSymbol(next);
             }}
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Пара" />
-            </SelectTrigger>
-            <SelectContent>
-              {FOREX_SYMBOL_OPTIONS.map((item) => (
-                <SelectItem key={item.symbol} value={item.symbol}>
-                  <PairLabel symbol={item.symbol} />
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
 
           <Select
             value={selectedInterval}
