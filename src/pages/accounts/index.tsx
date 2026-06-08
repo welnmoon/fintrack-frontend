@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Archive, X } from "lucide-react";
+import { Archive, RotateCcw, X } from "lucide-react";
 import { useGetAccounts } from "@/entities/account/api/use-get-accounts";
 import { useGetArchivedAccounts } from "@/entities/account/api/use-get-archived-accounts";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/entities/account/lib/account-backgrounds";
 import type { GetAccount } from "@/entities/account/model/types.api";
 import { AccountActionsMenu } from "@/features/accounts/account-actions/ui/account-actions-menu";
+import { useUnarchiveAccount } from "@/features/accounts/unarchive-account/api/use-unarchive-account";
 import { useCreateAccount } from "@/features/accounts/create-account/api/use-create-accoun";
 import {
   createAccountSchema,
@@ -19,7 +20,8 @@ import {
 } from "@/features/accounts/create-account/model/schema";
 import { cn } from "@/shared/lib";
 import { USER_PLAN } from "@/shared/model/plan";
-import { Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
+import { HttpError } from "@/shared/api/http-client";
+import { Button, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
 import { PageContainer } from "@/widgets/page-shell";
 
 /* ─── Background solid colour for legend & distribution bar ─── */
@@ -53,6 +55,32 @@ function accountWord(n: number) {
   if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100))
     return "счёта";
   return "счетов";
+}
+
+function getRequestErrorMessage(error: unknown) {
+  if (error instanceof HttpError && error.bodyText) {
+    try {
+      const parsed = JSON.parse(error.bodyText) as {
+        message?: string | string[];
+      };
+
+      if (Array.isArray(parsed.message)) {
+        return parsed.message.join(", ");
+      }
+
+      if (typeof parsed.message === "string") {
+        return parsed.message;
+      }
+    } catch {
+      return error.bodyText;
+    }
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Не удалось выполнить действие";
 }
 
 /* ─── Chip decoration ─── */
@@ -150,11 +178,16 @@ function AccountCard({
   account,
   accounts,
   archived = false,
+  canUnarchive = false,
 }: {
   account: GetAccount;
   accounts: GetAccount[];
   archived?: boolean;
+  canUnarchive?: boolean;
 }) {
+  const { mutate: unarchiveAccount, isPending: isUnarchivePending } =
+    useUnarchiveAccount(account.id);
+
   return (
     <div
       className={cn(
@@ -198,6 +231,27 @@ function AccountCard({
             ? `В архиве с ${new Date(account.archivedAt).toLocaleDateString("ru-RU")}`
             : account.currency}
         </p>
+        {archived ? (
+          <div className="mt-3">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={!canUnarchive || isUnarchivePending}
+              className="h-8 rounded-lg border border-white/15 bg-white/15 px-3 text-[12px] text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => {
+                unarchiveAccount(undefined, {
+                  onError: (error) => {
+                    window.alert(getRequestErrorMessage(error));
+                  },
+                });
+              }}
+            >
+              <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+              {isUnarchivePending ? "Возвращаю..." : "Вернуть из архива"}
+            </Button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -518,6 +572,7 @@ export function AccountsPage() {
   } = useGetArchivedAccounts();
   const maxAccounts = USER_PLAN === "FREE" ? 3 : Number.POSITIVE_INFINITY;
   const hasReachedLimit = (accounts?.length ?? 0) >= maxAccounts;
+  const canUnarchive = !hasReachedLimit;
 
   const errorMessage = error instanceof Error ? error.message : "Ошибка";
   const archivedErrorMessage =
@@ -629,9 +684,16 @@ export function AccountsPage() {
                   account={account}
                   accounts={[]}
                   archived
+                  canUnarchive={canUnarchive}
                 />
               ))}
           </div>
+
+          {USER_PLAN === "FREE" && archivedAccounts?.length ? (
+            <p className="text-sm text-muted-foreground">
+              Вернуть счёт из архива можно только если активных счетов меньше 3.
+            </p>
+          ) : null}
         </TabsContent>
       </Tabs>
 
