@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
-import { Link, useNavigate, useRoutes } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { RotateCw } from "lucide-react";
 import type { FinancialInsight } from "@/features/get-dashboard/model/types.api";
 import { formatCurrency } from "@/shared/lib";
