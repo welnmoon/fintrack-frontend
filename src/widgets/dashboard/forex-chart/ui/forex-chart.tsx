@@ -289,9 +289,8 @@ export default function PriceChart({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const hasFittedRef = useRef(false);
-  const seriesRef = useRef<
-    ISeriesApi<"Area"> | ISeriesApi<"Candlestick"> | null
-  >(null);
+  const areaSeriesRef = useRef<ISeriesApi<"Area"> | null>(null);
+  const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
 
   const [candles, setCandles] = useState<ForexSseSnapshot["candles"]>([]);
   const [status, setStatus] = useState<Status>("connecting");
@@ -442,6 +441,10 @@ export default function PriceChart({
         },
         timeScale: {
           borderColor: palette.border,
+          rightOffset: 0,
+          fixLeftEdge: true,
+          fixRightEdge: true,
+          lockVisibleTimeRangeOnResize: true,
         },
         crosshair: {
           vertLine: { color: palette.border },
@@ -449,21 +452,21 @@ export default function PriceChart({
         },
       });
 
-      const series =
-        selectedChartType === "candles"
-          ? chart.addSeries(CandlestickSeries, {
-              upColor: palette.up,
-              downColor: palette.down,
-              borderUpColor: palette.up,
-              borderDownColor: palette.down,
-              wickUpColor: palette.up,
-              wickDownColor: palette.down,
-            })
-          : chart.addSeries(AreaSeries, {
-            lineColor: palette.line,
-            topColor: palette.lineSoft,
-            bottomColor: palette.lineFade,
-          });
+      const candleSeries = chart.addSeries(CandlestickSeries, {
+        upColor: palette.up,
+        downColor: palette.down,
+        borderUpColor: palette.up,
+        borderDownColor: palette.down,
+        wickUpColor: palette.up,
+        wickDownColor: palette.down,
+        visible: selectedChartType === "candles",
+      });
+      const areaSeries = chart.addSeries(AreaSeries, {
+        lineColor: palette.line,
+        topColor: palette.lineSoft,
+        bottomColor: palette.lineFade,
+        visible: selectedChartType === "area",
+      });
 
       chart.timeScale().fitContent();
       hasFittedRef.current = false;
@@ -483,7 +486,8 @@ export default function PriceChart({
       resizeObserver.observe(container);
 
       chartRef.current = chart;
-      seriesRef.current = series;
+      candleSeriesRef.current = candleSeries;
+      areaSeriesRef.current = areaSeries;
     });
 
     return () => {
@@ -491,21 +495,25 @@ export default function PriceChart({
       resizeObserver?.disconnect();
       chart?.remove();
       chartRef.current = null;
-      seriesRef.current = null;
+      candleSeriesRef.current = null;
+      areaSeriesRef.current = null;
     };
-  }, [selectedChartType, theme]);
+  }, [theme]);
 
   useEffect(() => {
-    if (!seriesRef.current) return;
+    if (!areaSeriesRef.current || !candleSeriesRef.current) return;
 
-    if (selectedChartType === "candles") {
-      (seriesRef.current as ISeriesApi<"Candlestick">).setData(candlestickData);
-    } else {
-      (seriesRef.current as ISeriesApi<"Area">).setData(areaData);
-    }
+    areaSeriesRef.current.setData(areaData);
+    candleSeriesRef.current.setData(candlestickData);
 
-    const pointsCount =
-      selectedChartType === "candles" ? candlestickData.length : areaData.length;
+    areaSeriesRef.current.applyOptions({
+      visible: selectedChartType === "area",
+    });
+    candleSeriesRef.current.applyOptions({
+      visible: selectedChartType === "candles",
+    });
+
+    const pointsCount = candlestickData.length;
 
     if (!hasFittedRef.current && pointsCount > 0) {
       chartRef.current?.timeScale().fitContent();
@@ -515,12 +523,14 @@ export default function PriceChart({
 
   const chartViewport = (
     <div
-      ref={containerRef}
       className={cn(
-        "w-full rounded-xl",
-        chartViewportClassName ?? "h-[320px] sm:h-[360px]",
+        "relative w-full overflow-hidden rounded-xl",
+        chartViewportClassName ??
+          (variant === "page" ? "h-full" : "h-[320px] sm:h-[360px]"),
       )}
-    />
+    >
+      <div ref={containerRef} className="h-full w-full" />
+    </div>
   );
 
   if (variant === "page") {
@@ -570,7 +580,10 @@ export default function PriceChart({
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => setSelectedChartType(opt.value)}
+                      onClick={() => {
+                        if (opt.value === selectedChartType) return;
+                        setSelectedChartType(opt.value);
+                      }}
                       className={cn(
                         "h-6 rounded-[5px] px-2.5 font-mono text-[10px] font-medium text-[#B5B0A8] transition-colors hover:bg-[#F4F2EE] hover:text-[#555]",
                         selectedChartType === opt.value && "bg-[#F0EEE9] font-semibold text-[#333]",
@@ -615,7 +628,7 @@ export default function PriceChart({
 
         {/* ── Chart fills remaining height ── */}
         <div className="min-h-0 flex-1">
-          <div ref={containerRef} className="h-full w-full" />
+          {chartViewport}
         </div>
 
         {/* ── Footer meta ── */}
@@ -800,9 +813,10 @@ export default function PriceChart({
           {showChartTypeControl && (
             <Select
               value={selectedChartType}
-              onValueChange={(value) =>
-                setSelectedChartType(value as ForexChartType)
-              }
+              onValueChange={(value) => {
+                if (value === selectedChartType) return;
+                setSelectedChartType(value as ForexChartType);
+              }}
             >
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Вид" />
