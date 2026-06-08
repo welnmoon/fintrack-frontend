@@ -1,6 +1,7 @@
 import { useTheme } from "@/app/providers/theme-provider";
 import { cn } from "@/shared/lib";
 import { BACKEND_URL } from "@/shared/config/api";
+import { USER_PLAN } from "@/shared/model/plan";
 import {
   Badge,
   Select,
@@ -64,16 +65,16 @@ type ForexSseSnapshot = {
 };
 
 export const FOREX_SYMBOL_OPTIONS = [
-  { symbol: "USD/KZT", baseCode: "US", quoteCode: "KZ" },
-  { symbol: "EUR/KZT", baseCode: "EU", quoteCode: "KZ" },
-  { symbol: "EUR/USD", baseCode: "EU", quoteCode: "US" },
-  { symbol: "GBP/USD", baseCode: "GB", quoteCode: "US" },
-  { symbol: "USD/JPY", baseCode: "US", quoteCode: "JP" },
-  { symbol: "USD/CNY", baseCode: "US", quoteCode: "CN" },
-  { symbol: "USD/CHF", baseCode: "US", quoteCode: "CH" },
-  { symbol: "AUD/USD", baseCode: "AU", quoteCode: "US" },
-  { symbol: "USD/CAD", baseCode: "US", quoteCode: "CA" },
-  { symbol: "NZD/USD", baseCode: "NZ", quoteCode: "US" },
+  { symbol: "USD/KZT", baseCode: "US", quoteCode: "KZ", enabled: true },
+  { symbol: "EUR/KZT", baseCode: "EU", quoteCode: "KZ", enabled: true },
+  { symbol: "EUR/USD", baseCode: "EU", quoteCode: "US", enabled: true },
+  { symbol: "GBP/USD", baseCode: "GB", quoteCode: "US", enabled: false },
+  { symbol: "USD/JPY", baseCode: "US", quoteCode: "JP", enabled: false },
+  { symbol: "USD/CNY", baseCode: "US", quoteCode: "CN", enabled: false },
+  { symbol: "USD/CHF", baseCode: "US", quoteCode: "CH", enabled: false },
+  { symbol: "AUD/USD", baseCode: "AU", quoteCode: "US", enabled: false },
+  { symbol: "USD/CAD", baseCode: "US", quoteCode: "CA", enabled: false },
+  { symbol: "NZD/USD", baseCode: "NZ", quoteCode: "US", enabled: false },
 ] as const;
 type SymbolType = (typeof FOREX_SYMBOL_OPTIONS)[number]["symbol"];
 type CountryCode = "AU" | "CA" | "CH" | "CN" | "EU" | "GB" | "JP" | "KZ" | "NZ" | "US";
@@ -197,8 +198,19 @@ function PairSelect({
       </SelectTrigger>
       <SelectContent>
         {FOREX_SYMBOL_OPTIONS.map((item) => (
-          <SelectItem key={item.symbol} value={item.symbol}>
-            <PairLabel symbol={item.symbol} />
+          <SelectItem
+            key={item.symbol}
+            value={item.symbol}
+            disabled={USER_PLAN === "FREE" && !item.enabled}
+          >
+            <span className="flex w-full items-center justify-between gap-3">
+              <PairLabel symbol={item.symbol} />
+              {USER_PLAN === "FREE" && !item.enabled ? (
+                <span className="text-[10px] text-muted-foreground">
+                  Premium
+                </span>
+              ) : null}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>

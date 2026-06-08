@@ -6,6 +6,7 @@ import type {
 import { httpClient } from "@/shared/api/http-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CreateAccountSchemaType } from "../model/schema";
+import { invalidateFinancialData } from "@/shared/lib/query/invalidate-financial-data";
 
 const accountsQueryKey = ["accounts"] as const;
 const accountOptionsQueryKey = ["account-options"] as const;
@@ -74,8 +75,7 @@ export const useCreateAccount = () => {
     },
 
     onSettled: async () => {
-      await qc.invalidateQueries({ queryKey: accountsQueryKey });
-      await qc.invalidateQueries({ queryKey: accountOptionsQueryKey });
+      await invalidateFinancialData(qc);
     },
   });
 };

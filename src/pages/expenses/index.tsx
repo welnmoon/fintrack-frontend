@@ -35,6 +35,7 @@ export function ExpensesPage() {
         isError={isError}
         errorMessage={error instanceof Error ? error.message : undefined}
         emptyLabel="Расходов пока нет"
+        showSummary={false}
       />
     </PageContainer>
   );

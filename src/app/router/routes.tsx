@@ -11,6 +11,7 @@ import { LoginPage } from "@/pages/login";
 import { NotFoundPage } from "@/pages/not-found";
 import { ReportsPage } from "@/pages/reports";
 import { SettingsPage } from "@/pages/settings";
+import { TransactionsPage } from "@/pages/transactions";
 import { TransfersPage } from "@/pages/transfers";
 import { ROUTES } from "@/shared/config";
 import RegisterPage from "@/pages/register";
@@ -43,6 +44,10 @@ export const appRouter = createBrowserRouter([
       {
         path: toChildPath(ROUTES.overview),
         element: <DashboardHomePage />,
+      },
+      {
+        path: toChildPath(ROUTES.transactions),
+        element: <TransactionsPage />,
       },
       {
         path: toChildPath(ROUTES.forex),

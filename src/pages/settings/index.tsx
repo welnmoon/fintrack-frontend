@@ -5,9 +5,15 @@ import LoginForm from "@/features/auth-login/ui/login-form";
 import UpdateUserCurrencyForm from "@/features/update-user/ui/update-user-currency";
 import UpdateUserForm from "@/features/update-user/ui/update-user";
 import { cn } from "@/shared/lib";
-import { Avatar, AvatarFallback, Switch } from "@/shared/ui";
+import { Avatar, AvatarFallback } from "@/shared/ui";
 import { PageContainer, PageHeader } from "@/widgets/page-shell";
-import { Check, LaptopMinimal, LogOut, MoonStar, SunMedium } from "lucide-react";
+import {
+  Check,
+  LaptopMinimal,
+  LogOut,
+  MoonStar,
+  SunMedium,
+} from "lucide-react";
 import { useState } from "react";
 import { HashLoader } from "react-spinners";
 
@@ -25,31 +31,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
       {children}
     </p>
-  );
-}
-
-/* ── Toggle row ── */
-function SettingRow({
-  title,
-  description,
-  defaultChecked,
-}: {
-  title: string;
-  description: string;
-  defaultChecked?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-6 border-b border-border/50 px-6 py-4 last:border-b-0">
-      <div className="min-w-0">
-        <p className="text-[14px] font-semibold leading-snug text-foreground">
-          {title}
-        </p>
-        <p className="mt-[3px] text-[13px] text-muted-foreground">
-          {description}
-        </p>
-      </div>
-      <Switch defaultChecked={defaultChecked} className="shrink-0" />
-    </div>
   );
 }
 
@@ -200,11 +181,12 @@ export function SettingsPage() {
   const displayName = [user?.firstName, user?.lastName]
     .filter(Boolean)
     .join(" ");
-  const initials = [user?.firstName, user?.lastName]
-    .filter(Boolean)
-    .map((part) => part?.trim().charAt(0).toUpperCase())
-    .join("")
-    .slice(0, 2) || (user?.email || "U").slice(0, 2).toUpperCase();
+  const initials =
+    [user?.firstName, user?.lastName]
+      .filter(Boolean)
+      .map((part) => part?.trim().charAt(0).toUpperCase())
+      .join("")
+      .slice(0, 2) || (user?.email || "U").slice(0, 2).toUpperCase();
 
   return (
     <PageContainer>
@@ -409,23 +391,6 @@ export function SettingsPage() {
               <UpdateUserCurrencyForm user={user} />
             </div>
           ) : null}
-
-          <SectionLabel>Поведение интерфейса</SectionLabel>
-          <div className="overflow-hidden rounded-[20px] border border-border bg-card">
-            <SettingRow
-              title="Компактный режим"
-              description="Уменьшенные отступы в таблицах и карточках."
-            />
-            <SettingRow
-              title="Анимации"
-              description="Плавные переходы при смене разделов и открытии модалок."
-              defaultChecked
-            />
-            <SettingRow
-              title="Звуковые уведомления"
-              description="Короткий звук при успешном добавлении транзакции."
-            />
-          </div>
         </div>
       )}
     </PageContainer>

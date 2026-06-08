@@ -8,6 +8,7 @@ import { useMakeTransfer } from "../api/use-make-transfer";
 import { createTransferSchema, type CreateTransferDto } from "../model/schema";
 import type { GetAccount } from "@/entities/account/model/types.api";
 import { cn } from "@/shared/lib";
+import { invalidateFinancialData } from "@/shared/lib/query/invalidate-financial-data";
 import {
   Button,
   Input,
@@ -69,8 +70,8 @@ const MakeTransferFormDialog = ({
     }
 
     mutate(values, {
-      onSuccess: () => {
-        qc.invalidateQueries({ queryKey: ["accounts"] });
+      onSuccess: async () => {
+        await invalidateFinancialData(qc);
         form.reset({
           fromAccountId: defaultFromAccountId ?? "",
           toAccountId: "",

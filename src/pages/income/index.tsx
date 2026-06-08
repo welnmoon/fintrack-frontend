@@ -35,6 +35,7 @@ export function IncomePage() {
         isError={isError}
         errorMessage={error instanceof Error ? error.message : undefined}
         emptyLabel="Доходов пока нет"
+        showSummary={false}
       />
     </PageContainer>
   );

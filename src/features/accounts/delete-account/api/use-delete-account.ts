@@ -3,9 +3,9 @@ import type {
   GetAccount,
   GetAccountOptions,
 } from "@/entities/account/model/types.api";
-import { dashboardQueryKey } from "@/features/get-dashboard/api/use-get-dashboard";
 import { httpClient } from "@/shared/api/http-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { invalidateFinancialData } from "@/shared/lib/query/invalidate-financial-data";
 
 const accountsQueryKey = ["accounts"] as const;
 const accountOptionsQueryKey = ["account-options"] as const;
@@ -50,9 +50,7 @@ export const useDeleteAccount = (accountId: string) => {
     },
 
     onSettled: async () => {
-      await qc.invalidateQueries({ queryKey: accountsQueryKey });
-      await qc.invalidateQueries({ queryKey: accountOptionsQueryKey });
-      await qc.invalidateQueries({ queryKey: [dashboardQueryKey] });
+      await invalidateFinancialData(qc);
     },
   });
 };

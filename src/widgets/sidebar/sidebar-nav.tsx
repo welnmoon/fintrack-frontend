@@ -5,10 +5,9 @@ import {
   CreditCard,
   Edit,
   Gauge,
+  ListFilter,
   Settings,
   Tags,
-  TrendingDown,
-  TrendingUp,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { ROUTES } from "@/shared/config";
@@ -23,9 +22,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Главное", to: ROUTES.overview, icon: Gauge },
+  { label: "Операции", to: ROUTES.transactions, icon: ListFilter },
   { label: "Forex", to: ROUTES.forex, icon: Activity },
-  { label: "Расходы", to: ROUTES.expenses, icon: TrendingDown },
-  { label: "Доходы", to: ROUTES.income, icon: TrendingUp },
   { label: "Счета", to: ROUTES.accounts, icon: CreditCard },
   { label: "Корректировки", to: ROUTES.adjustment, icon: Edit },
   { label: "Категории", to: ROUTES.categories, icon: Tags },

@@ -38,11 +38,11 @@ export function DateRangePicker({ value, onChange, buttonClassName }: Props) {
         <Button
           variant="outline"
           className={cn(
-            "h-8 justify-start rounded-[8px] border-[#DDD9D1] bg-[#F7F6F3] px-3 text-left font-mono text-[11px] font-medium text-[#555] hover:bg-[#F1EFEB]",
+            "h-8 justify-start rounded-[8px] border-border bg-card px-3 text-left font-mono text-[11px] font-medium text-foreground hover:bg-muted",
             buttonClassName,
           )}
         >
-          <CalendarIcon className="h-3.5 w-3.5 text-[#AAA49C]" />
+          <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
           <span>{label}</span>
         </Button>
       </PopoverTrigger>

@@ -17,6 +17,7 @@ import {
   type CreateAccountSchemaInput,
 } from "@/features/accounts/create-account/model/schema";
 import { cn } from "@/shared/lib";
+import { USER_PLAN } from "@/shared/model/plan";
 import { Skeleton } from "@/shared/ui";
 import { PageContainer } from "@/widgets/page-shell";
 
@@ -265,7 +266,7 @@ function CreateAccountModal({
   onClose: () => void;
   accountCount: number;
 }) {
-  const MAX = 5;
+  const MAX = USER_PLAN === "FREE" ? 3 : 999;
   const hasReachedLimit = accountCount >= MAX;
 
   const form = useForm<CreateAccountSchemaInput>({
@@ -493,6 +494,8 @@ function AccountCardSkeleton() {
 export function AccountsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const { data: accounts, isLoading, isError, error } = useGetAccounts();
+  const maxAccounts = USER_PLAN === "FREE" ? 3 : Number.POSITIVE_INFINITY;
+  const hasReachedLimit = (accounts?.length ?? 0) >= maxAccounts;
 
   const errorMessage = error instanceof Error ? error.message : "Ошибка";
 
@@ -549,10 +552,16 @@ export function AccountsPage() {
             />
           ))}
 
-        {!isLoading && !isError && (
+        {!isLoading && !isError && !hasReachedLimit && (
           <AddCardSlot onAdd={() => setModalOpen(true)} />
         )}
       </div>
+
+      {!isLoading && !isError && USER_PLAN === "FREE" && hasReachedLimit && (
+        <p className="mt-4 text-sm text-muted-foreground">
+          На бесплатном плане доступно только 3 счета.
+        </p>
+      )}
 
       <CreateAccountModal
         open={modalOpen}

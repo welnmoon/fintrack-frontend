@@ -2,12 +2,11 @@ import { transactionsApi } from "@/entities/transaction/api/transactions.api";
 import { httpClient } from "@/shared/api/http-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CreateTransactionType } from "../model/schema";
-import { dashboardQueryKey } from "@/features/get-dashboard/api/use-get-dashboard";
-import { balanceHistoryQueryKey } from "@/features/get-dashboard/api/use-balance-history";
 import type { Transaction } from "@/entities/transaction";
 import { userCategoriesQueryKey } from "@/entities/category/api/use-get-categories";
 import type { UserCategory } from "@/entities/category/model/types.api";
 import type { GetAccount } from "@/entities/account/model/types.api";
+import { invalidateFinancialData } from "@/shared/lib/query/invalidate-financial-data";
 
 export type OptimisticTransaction = Omit<
   Transaction,
@@ -31,12 +30,7 @@ export const useCreateTransaction = () => {
         body: JSON.stringify(dto),
       }),
     onSuccess: async () => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["transactions"] }),
-        qc.invalidateQueries({ queryKey: ["accounts"] }),
-        qc.invalidateQueries({ queryKey: [dashboardQueryKey] }),
-        qc.invalidateQueries({ queryKey: [balanceHistoryQueryKey] }),
-      ]);
+      await invalidateFinancialData(qc);
     },
     onMutate: async (dto) => {
       await qc.cancelQueries({ queryKey: ["transactions"] });

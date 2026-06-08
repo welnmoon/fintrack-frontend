@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMakeTransfer } from "../api/use-make-transfer";
 import { createTransferSchema, type CreateTransferDto } from "../model/schema";
 import type { GetAccount } from "@/entities/account/model/types.api";
+import { invalidateFinancialData } from "@/shared/lib/query/invalidate-financial-data";
 import {
   Button,
   DropdownMenu,
@@ -68,8 +69,8 @@ const MakeTransferFormPopover = ({
     }
 
     mutate(values, {
-      onSuccess: () => {
-        qc.invalidateQueries({ queryKey: ["accounts"] });
+      onSuccess: async () => {
+        await invalidateFinancialData(qc);
         form.reset({
           fromAccountId: defaultFromAccountId ?? "",
           toAccountId: "",

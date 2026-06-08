@@ -298,12 +298,12 @@ function TxRow({
   });
 
   return (
-    <div className="border-t border-[#F5F3EE] first:border-t-0">
+    <div className="border-t border-border/40 first:border-t-0">
       {/* Row */}
       <div
         className={cn(
-          "flex h-10 cursor-pointer select-none items-center gap-[7px] px-5 transition-colors hover:bg-[#FAFAF7]",
-          isOpen && "bg-[#FAFAF5]",
+          "flex h-10 cursor-pointer select-none items-center gap-[7px] px-5 transition-colors hover:bg-muted/40",
+          isOpen && "bg-muted/30",
         )}
         onClick={onToggle}
       >
@@ -327,7 +327,7 @@ function TxRow({
 
         {/* Note preview */}
         {tx.note ? (
-          <span className="max-w-[160px] min-w-0 flex-shrink overflow-hidden text-ellipsis whitespace-nowrap text-[12px] text-[#B8B5AC]">
+          <span className="max-w-[160px] min-w-0 flex-shrink overflow-hidden text-ellipsis whitespace-nowrap text-[12px] text-muted-foreground">
             {tx.note}
           </span>
         ) : null}
@@ -341,7 +341,7 @@ function TxRow({
         <span
           className={cn(
             "min-w-[108px] whitespace-nowrap text-right font-mono text-[13.5px] font-medium",
-            isIncome ? "text-[#2A8A42]" : "text-[#2A2A26]",
+            isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-foreground",
           )}
         >
           {isIncome ? "+" : "−"}
@@ -352,7 +352,7 @@ function TxRow({
         <span
           className={cn(
             "flex h-4 w-4 flex-shrink-0 items-center justify-center text-[#D0CCC4] transition-all duration-[220ms]",
-            isOpen && "rotate-180 text-[#9A9890]",
+            isOpen && "rotate-180 text-foreground/60",
           )}
         >
           <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
@@ -363,11 +363,11 @@ function TxRow({
 
       {/* Accordion detail */}
       <div
-        className="overflow-hidden bg-[#FAFAF7] transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+        className="overflow-hidden bg-muted/20 transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
         style={{ maxHeight: isOpen ? "300px" : 0 }}
       >
         <div
-          className="grid gap-x-4 gap-y-2.5 border-t border-[#F0EDE5] px-5 py-3.5"
+          className="grid gap-x-4 gap-y-2.5 border-t border-border/40 px-5 py-3.5"
           style={{
             paddingLeft: "calc(1.25rem + 26px + 7px)",
             gridTemplateColumns: "1fr 1fr 1fr",
@@ -375,22 +375,22 @@ function TxRow({
         >
           {/* Date + time */}
           <div>
-            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.07em] text-[#C0BDB4]">
+            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
               Дата и время
             </p>
-            <p className="text-[12.5px] text-[#4A4944]">
+            <p className="text-[12.5px] text-foreground/85">
               {dateStr}, {timeStr}
             </p>
           </div>
 
           {/* Account */}
           <div>
-            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.07em] text-[#C0BDB4]">
+            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
               Счёт
             </p>
             <div className="flex items-center gap-1.5">
               <MiniCard backgroundKey={account?.backgroundKey} small />
-              <p className="text-[12.5px] text-[#4A4944]">
+              <p className="text-[12.5px] text-foreground/85">
                 {account?.name ?? "—"}
               </p>
             </div>
@@ -398,23 +398,23 @@ function TxRow({
 
           {/* Category */}
           <div>
-            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.07em] text-[#C0BDB4]">
+            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
               Категория
             </p>
-            <p className="text-[12.5px] text-[#4A4944]">
+            <p className="text-[12.5px] text-foreground/85">
               {tx.category ? displayCategoryName(tx.category.name) : "—"}
             </p>
           </div>
 
           {/* Note */}
           <div>
-            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.07em] text-[#C0BDB4]">
+            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
               Комментарий
             </p>
             <p
               className={cn(
                 "text-[12.5px]",
-                tx.note ? "text-[#4A4944]" : "text-[#C0BDB4]",
+                tx.note ? "text-foreground/85" : "text-muted-foreground",
               )}
             >
               {tx.note ?? "Без комментария"}
@@ -423,7 +423,7 @@ function TxRow({
 
           {/* Emotion */}
           <div>
-            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.07em] text-[#C0BDB4]">
+            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
               Эмоция
             </p>
             {emoDetail ? (
@@ -435,19 +435,19 @@ function TxRow({
                 {emoDetail.label}
               </span>
             ) : (
-              <p className="text-[12.5px] text-[#C0BDB4]">—</p>
+              <p className="text-[12.5px] text-muted-foreground">—</p>
             )}
           </div>
 
           {/* Amount */}
           <div>
-            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.07em] text-[#C0BDB4]">
+            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
               Сумма
             </p>
             <p
               className={cn(
                 "font-mono text-[12px]",
-                isIncome ? "text-[#2A8A42]" : "text-[#4A4944]",
+                isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-foreground/85",
               )}
             >
               {isIncome ? "+" : "−"}
@@ -498,16 +498,16 @@ function MonthDivider({
 }) {
   const isPositive = net >= 0;
   return (
-    <div className="flex items-center gap-2.5 border-t border-[#E5E2D8] bg-[#F7F5F0] px-5 py-2">
-      <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.06em] text-[#7A7971]">
+    <div className="flex items-center gap-2.5 border-t border-border bg-muted/25 px-5 py-2">
+      <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.06em] text-foreground/70">
         {label}
       </span>
-      <span className="text-[10px] font-medium text-[#C0BDB4]">· итого</span>
-      <span className="h-px flex-1 bg-[#E5E2D8]" />
+      <span className="text-[10px] font-medium text-muted-foreground">· итого</span>
+      <span className="h-px flex-1 bg-border" />
       <span
         className={cn(
           "font-mono text-[11px] font-medium",
-          isPositive ? "text-[#5A9A6A]" : "text-[#9A8A78]",
+          isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
         )}
       >
         {isPositive ? "+" : "−"}
@@ -544,14 +544,14 @@ function DateGroup({
     <div>
       {/* Date header */}
       <div className="flex items-center gap-2 px-5 pb-[3px] pt-[7px]">
-        <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.08em] text-[#C0BDB4]">
+        <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           {label}
         </span>
-        <span className="h-px flex-1 bg-[#F0EDE5]" />
+        <span className="h-px flex-1 bg-border/50" />
         <span
           className={cn(
             "font-mono text-[11px]",
-            isPositive ? "text-[#7ABB8A]" : "text-[#C8C5BC]",
+            isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
           )}
         >
           {isPositive ? "+" : "−"}
@@ -581,6 +581,8 @@ export type TransactionListProps = {
   isError?: boolean;
   errorMessage?: string;
   emptyLabel?: string;
+  showSummary?: boolean;
+  summaryLabel?: string;
 };
 
 /* ─── Main component ─── */
@@ -591,6 +593,8 @@ export function TransactionList({
   isError = false,
   errorMessage,
   emptyLabel = "Пока нет операций",
+  showSummary = true,
+  summaryLabel,
 }: TransactionListProps) {
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -610,11 +614,11 @@ export function TransactionList({
     (a, b) => b.occurredAt.getTime() - a.occurredAt.getTime(),
   );
   const latestTx = sorted[0];
-  const periodLabel = latestTx
+  const periodLabel = summaryLabel ?? (latestTx
     ? latestTx.occurredAt
         .toLocaleDateString("ru-RU", { month: "long", year: "numeric" })
         .replace(" г.", "")
-    : "Текущий период";
+    : "Текущий период");
 
   /* Accounts for legend */
   const legendAccounts = [...accountById.values()].slice(0, 5);
@@ -629,64 +633,65 @@ export function TransactionList({
   const txCount = (transactions ?? []).length;
 
   return (
-    <div className="overflow-hidden rounded-[16px] border border-[#E5E2D8] bg-white">
+    <div className="overflow-hidden rounded-[16px] border border-border bg-card">
       {/* Monthly summary */}
-      <div className="flex flex-wrap items-center gap-0 border-b border-[#E5E2D8] bg-[#FAFAF7] px-5 py-3.5">
-        <span className="min-w-[80px] text-[13px] font-semibold text-[#1C1B18]">
-          {isLoading ? <Skeleton className="h-4 w-20" /> : periodLabel}
-        </span>
-        <div className="flex flex-1 flex-wrap">
-          {/* Income */}
-          <div className="flex-1 border-l border-[#E5E2D8] px-4">
-            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.08em] text-[#C0BDB4]">
-              Доход
-            </p>
-            {isLoading ? (
-              <Skeleton className="h-4 w-20" />
-            ) : (
-              <p className="font-mono text-[15px] font-medium tracking-[-0.02em] text-[#2A8A42]">
-                +{fmtRow(totalIncome, currency)}
+      {showSummary && (
+        <div className="flex flex-wrap items-center gap-0 border-b border-border bg-muted/30 px-5 py-3.5">
+          <span className="min-w-[80px] text-[13px] font-semibold text-foreground">
+            {isLoading ? <Skeleton className="h-4 w-20" /> : periodLabel}
+          </span>
+          <div className="flex flex-1 flex-wrap">
+            <div className="flex-1 border-l border-border px-4">
+              <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                Доход
               </p>
-            )}
-          </div>
-          {/* Expense */}
-          <div className="flex-1 border-l border-[#E5E2D8] px-4">
-            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.08em] text-[#C0BDB4]">
-              Расход
-            </p>
-            {isLoading ? (
-              <Skeleton className="h-4 w-20" />
-            ) : (
-              <p className="font-mono text-[15px] font-medium tracking-[-0.02em] text-[#1C1B18]">
-                −{fmtRow(totalExpense, currency)}
+              {isLoading ? (
+                <Skeleton className="h-4 w-20" />
+              ) : (
+                <p className="font-mono text-[15px] font-medium tracking-[-0.02em] text-emerald-600 dark:text-emerald-400">
+                  +{fmtRow(totalIncome, currency)}
+                </p>
+              )}
+            </div>
+            <div className="flex-1 border-l border-border px-4">
+              <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                Расход
               </p>
-            )}
-          </div>
-          {/* Net */}
-          <div className="flex-1 border-l border-[#E5E2D8] px-4">
-            <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.08em] text-[#C0BDB4]">
-              Итог
-            </p>
-            {isLoading ? (
-              <Skeleton className="h-4 w-20" />
-            ) : (
-              <p
-                className={cn(
-                  "font-mono text-[15px] font-medium tracking-[-0.02em]",
-                  net >= 0 ? "text-[#2A8A42]" : "text-[#B83030]",
-                )}
-              >
-                {net >= 0 ? "+" : "−"}
-                {fmtRow(Math.abs(net), currency)}
+              {isLoading ? (
+                <Skeleton className="h-4 w-20" />
+              ) : (
+                <p className="font-mono text-[15px] font-medium tracking-[-0.02em] text-foreground">
+                  −{fmtRow(totalExpense, currency)}
+                </p>
+              )}
+            </div>
+            <div className="flex-1 border-l border-border px-4">
+              <p className="mb-[2px] text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                Итог
               </p>
-            )}
+              {isLoading ? (
+                <Skeleton className="h-4 w-20" />
+              ) : (
+                <p
+                  className={cn(
+                    "font-mono text-[15px] font-medium tracking-[-0.02em]",
+                    net >= 0
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-red-600 dark:text-red-400",
+                  )}
+                >
+                  {net >= 0 ? "+" : "−"}
+                  {fmtRow(Math.abs(net), currency)}
+                </p>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* List header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E2D8] px-5 py-2.5">
-        <span className="text-[13px] font-semibold text-[#1C1B18]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-2.5">
+        <span className="text-[13px] font-semibold text-foreground">
           Транзакции
         </span>
         {legendAccounts.length > 0 && (
@@ -698,7 +703,7 @@ export function TransactionList({
                 title={acc.name}
               >
                 <MiniCard backgroundKey={acc.backgroundKey} />
-                <span className="hidden text-[11px] text-[#B0ADA4] sm:inline">
+                <span className="hidden text-[11px] text-muted-foreground sm:inline">
                   {acc.name.split(" ")[0]}
                 </span>
               </div>
@@ -713,7 +718,7 @@ export function TransactionList({
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="flex h-10 items-center gap-3 border-t border-[#F5F3EE] px-5 first:border-t-0"
+              className="flex h-10 items-center gap-3 border-t border-border/40 px-5 first:border-t-0"
             >
               <Skeleton className="h-[26px] w-[26px] flex-shrink-0 rounded-[7px]" />
               <Skeleton className="h-3 w-24" />
@@ -725,11 +730,11 @@ export function TransactionList({
           ))}
         </div>
       ) : isError ? (
-        <div className="px-5 py-10 text-center text-[13px] text-[#C0BDB4]">
+        <div className="px-5 py-10 text-center text-[13px] text-muted-foreground">
           Ошибка загрузки{errorMessage ? `: ${errorMessage}` : ""}
         </div>
       ) : !transactions?.length ? (
-        <div className="px-5 py-10 text-center text-[13px] text-[#C0BDB4]">
+        <div className="px-5 py-10 text-center text-[13px] text-muted-foreground">
           {emptyLabel}
         </div>
       ) : (
@@ -758,11 +763,11 @@ export function TransactionList({
 
       {/* Footer */}
       {!isLoading && txCount > 0 && (
-        <div className="flex items-center justify-between border-t border-[#E5E2D8] px-5 py-2.5">
-          <span className="text-[11px] text-[#C0BDB4]">
+        <div className="flex items-center justify-between border-t border-border px-5 py-2.5">
+          <span className="text-[11px] text-muted-foreground">
             {txCount} {txWord(txCount)} · {uniqueDays} {dayWord(uniqueDays)}
           </span>
-          <span className="font-mono text-[13px] font-medium text-[#1C1B18]">
+          <span className="font-mono text-[13px] font-medium text-foreground">
             Итог: {net >= 0 ? "+" : "−"}
             {fmtRow(Math.abs(net), currency)}
           </span>

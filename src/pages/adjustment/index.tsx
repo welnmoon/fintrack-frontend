@@ -5,12 +5,6 @@ import CreateTransactionDialog from "@/features/create-transaction/ui/create-tra
 import {
   Card,
   CardContent,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from "@/shared/ui";
 import { PageContainer, PageHeader } from "@/widgets/page-shell";
 
@@ -30,7 +24,7 @@ export function AdjustmentPage() {
     <PageContainer>
       <PageHeader
         title="Корректировки"
-        description="Список доходных операций и фильтры для будущей интеграции."
+        description="Корректирующие операции по счетам."
         actions={
           <CreateTransactionDialog
             type={TRANSACTION_TYPE}
@@ -38,26 +32,6 @@ export function AdjustmentPage() {
           />
         }
       />
-
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid gap-3 md:grid-cols-4">
-            <Input placeholder="Поиск по описанию" />
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Источник дохода" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все источники</SelectItem>
-                <SelectItem value="salary">Зарплата</SelectItem>
-                <SelectItem value="freelance">Фриланс</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input type="date" />
-            <Input type="date" />
-          </div>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardContent className="pt-6">

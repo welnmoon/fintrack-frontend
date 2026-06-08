@@ -15,6 +15,7 @@ import {
 import FormInput from "@/shared/ui/components/form-input";
 import { useGetAccounts } from "@/entities/account/api/use-get-accounts";
 import { useCreateAccount } from "../api/use-create-accoun";
+import { USER_PLAN } from "@/shared/model/plan";
 import {
   createAccountSchema,
   type CreateAccountSchemaInput,
@@ -32,7 +33,7 @@ const currencyOptions = [
   { value: "EUR", label: "EUR" },
 ] as const;
 
-const MAX_ACCOUNTS_PER_USER = 5;
+const MAX_ACCOUNTS_PER_USER = USER_PLAN === "FREE" ? 3 : 999;
 
 const CreateAccountForm = () => {
   const { data: accounts } = useGetAccounts();

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useRoutes } from "react-router-dom";
 import { RotateCw } from "lucide-react";
 import type { FinancialInsight } from "@/features/get-dashboard/model/types.api";
 import { formatCurrency } from "@/shared/lib";
@@ -17,6 +17,7 @@ import {
   Skeleton,
 } from "@/shared/ui";
 import { localizeText } from "@/shared/lib/category/display-category-name";
+import { USER_PLAN } from "@/shared/model/plan";
 import { PageContainer, PageHeader } from "@/widgets/page-shell";
 import PieChartWithCustomizedLabel from "@/widgets/dashboard/expense-pie/ui/expense-pie";
 import BalanceHistory from "@/widgets/dashboard/balance-history/ui/balance-history";
@@ -424,6 +425,7 @@ export function DashboardHomePage() {
   const [expensePieRange, setExpensePieRange] = useState<DateRange | undefined>(
     pendingExpensePieRange,
   );
+
   const {
     data,
     isLoading,
@@ -502,7 +504,10 @@ export function DashboardHomePage() {
               className="inline-flex items-center rounded-[7px] border border-[#DDD9D1] px-2.5 py-1.5 font-mono text-[11px] text-[#B5B0A8] transition-colors hover:bg-white hover:text-[#555]"
               aria-label="Обновить данные"
             >
-              <RotateCw className="h-3.5 w-3.5" />
+              <RotateCw
+                onClick={() => window.location.reload()}
+                className="h-3.5 w-3.5"
+              />
             </button>
           </div>
         }
@@ -657,7 +662,12 @@ export function DashboardHomePage() {
         isError={isError}
       />
 
-      <FinancialInsightsBlock insights={data?.insights} isLoading={isLoading} />
+      {USER_PLAN !== "FREE" ? (
+        <FinancialInsightsBlock
+          insights={data?.insights}
+          isLoading={isLoading}
+        />
+      ) : null}
 
       <Card className="overflow-hidden border-[#DDD9D1]">
         <CardContent className="p-0">
