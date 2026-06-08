@@ -7,6 +7,7 @@ export async function invalidateFinancialData(qc: QueryClient) {
   await Promise.all([
     qc.invalidateQueries({ queryKey: ["transactions"] }),
     qc.invalidateQueries({ queryKey: ["accounts"] }),
+    qc.invalidateQueries({ queryKey: ["accounts", "archived"] }),
     qc.invalidateQueries({ queryKey: ["account-options"] }),
     qc.invalidateQueries({ queryKey: dashboardQueryKey }),
     qc.invalidateQueries({ queryKey: [balanceHistoryQueryKey] }),

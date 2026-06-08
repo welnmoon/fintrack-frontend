@@ -31,6 +31,16 @@ export {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/shared/ui/components/dropdown-menu";
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/shared/ui/components/dialog";
 export { Input } from "@/shared/ui/components/input";
 export { Label } from "@/shared/ui/components/label";
 export { default as FormSelect } from "@/shared/ui/components/form-select";

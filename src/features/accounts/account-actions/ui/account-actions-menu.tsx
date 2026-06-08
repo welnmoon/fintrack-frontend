@@ -1,11 +1,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { MoreHorizontal, ArrowLeftRight, Palette, Trash2, Wallet2 } from "lucide-react";
+import {
+  Archive,
+  ArrowLeftRight,
+  MoreHorizontal,
+  Palette,
+  Trash2,
+  Wallet2,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import type { AccountBackgroundKey } from "@/entities/account/lib/account-backgrounds";
 import type { GetAccount } from "@/entities/account/model/types.api";
 import { AccountBackgroundPicker } from "@/entities/account/ui/account-background-picker";
+import { useArchiveAccount } from "@/features/accounts/archive-account/api/use-archive-account";
 import { useDeleteAccount } from "@/features/accounts/delete-account/api/use-delete-account";
 import { useSetBalance } from "@/features/accounts/set-balance/api/use-set-balance";
 import {
@@ -22,6 +30,12 @@ import {
 import { HttpError } from "@/shared/api/http-client";
 import {
   Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -46,6 +60,7 @@ import FormInput from "@/shared/ui/components/form-input";
 import { useUpdateAccountBackground } from "../../update-background/api/use-update-account-background";
 
 type ActivePanel = "balance" | "transfer" | "background" | null;
+type ConfirmAction = "archive" | "delete" | null;
 
 type AccountActionsMenuProps = {
   account: GetAccount;
@@ -85,6 +100,7 @@ export function AccountActionsMenu({
   const qc = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [backgroundKey, setBackgroundKey] = useState<AccountBackgroundKey>(
     account.backgroundKey,
   );
@@ -120,6 +136,8 @@ export function AccountActionsMenu({
     isPending: isBackgroundPending,
     error: backgroundError,
   } = useUpdateAccountBackground(account.id);
+  const { mutate: archiveAccount, isPending: isArchivePending } =
+    useArchiveAccount(account.id);
   const { mutate: deleteAccount, isPending: isDeletePending } =
     useDeleteAccount(account.id);
 
@@ -199,15 +217,23 @@ export function AccountActionsMenu({
   };
 
   const onDelete = () => {
-    const isConfirmed = window.confirm(
-      `Удалить счет "${account.name}"? Это доступно только для пустого счета без операций и переводов.`,
-    );
-
-    if (!isConfirmed) return;
-
     deleteAccount(undefined, {
       onError: (error) => {
         window.alert(getRequestErrorMessage(error));
+      },
+      onSuccess: () => {
+        setConfirmAction(null);
+      },
+    });
+  };
+
+  const onArchive = () => {
+    archiveAccount(undefined, {
+      onError: (error) => {
+        window.alert(getRequestErrorMessage(error));
+      },
+      onSuccess: () => {
+        setConfirmAction(null);
       },
     });
   };
@@ -245,7 +271,20 @@ export function AccountActionsMenu({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onSelect={onDelete}
+            onSelect={() => {
+              setMenuOpen(false);
+              setConfirmAction("archive");
+            }}
+            disabled={isArchivePending}
+          >
+            <Archive className="h-4 w-4" />
+            {isArchivePending ? "Архивирую..." : "Архивировать счет"}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => {
+              setMenuOpen(false);
+              setConfirmAction("delete");
+            }}
             disabled={isDeletePending}
             className="text-destructive focus:text-destructive"
           >
@@ -254,6 +293,52 @@ export function AccountActionsMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Dialog
+        open={confirmAction !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {confirmAction === "archive"
+                ? "Архивировать счет"
+                : "Удалить счет"}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmAction === "archive"
+                ? `Счет "${account.name}" исчезнет из активных счетов и перестанет учитываться в лимите бесплатного плана. История операций сохранится.`
+                : `Счет "${account.name}" будет удален только если он пустой и не содержит операций или переводов.`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConfirmAction(null)}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              variant={confirmAction === "delete" ? "destructive" : "default"}
+              onClick={confirmAction === "archive" ? onArchive : onDelete}
+              disabled={isArchivePending || isDeletePending}
+            >
+              {confirmAction === "archive"
+                ? isArchivePending
+                  ? "Архивирую..."
+                  : "Архивировать"
+                : isDeletePending
+                  ? "Удаляю..."
+                  : "Удалить"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Sheet open={activePanel !== null} onOpenChange={(open) => !open && closePanel()}>
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">

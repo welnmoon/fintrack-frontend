@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { X } from "lucide-react";
+import { Archive, X } from "lucide-react";
 import { useGetAccounts } from "@/entities/account/api/use-get-accounts";
+import { useGetArchivedAccounts } from "@/entities/account/api/use-get-archived-accounts";
 import {
   ACCOUNT_BACKGROUND_OPTIONS,
   DEFAULT_ACCOUNT_BACKGROUND_KEY,
@@ -18,7 +19,7 @@ import {
 } from "@/features/accounts/create-account/model/schema";
 import { cn } from "@/shared/lib";
 import { USER_PLAN } from "@/shared/model/plan";
-import { Skeleton } from "@/shared/ui";
+import { Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
 import { PageContainer } from "@/widgets/page-shell";
 
 /* ─── Background solid colour for legend & distribution bar ─── */
@@ -148,14 +149,17 @@ function SummaryCard({ accounts }: { accounts: GetAccount[] }) {
 function AccountCard({
   account,
   accounts,
+  archived = false,
 }: {
   account: GetAccount;
   accounts: GetAccount[];
+  archived?: boolean;
 }) {
   return (
     <div
       className={cn(
         "account-bg relative flex aspect-[1.68] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-5 text-white transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-2xl",
+        archived && "opacity-80 grayscale-[0.08]",
         getAccountBackgroundClassName(account.backgroundKey),
       )}
     >
@@ -164,7 +168,13 @@ function AccountCard({
         <span className="rounded-[5px] bg-white/20 px-2 py-[3px] text-[10px] font-bold tracking-[0.1em] backdrop-blur-sm">
           {account.type}
         </span>
-        <AccountActionsMenu account={account} accounts={accounts} />
+        {archived ? (
+          <span className="rounded-[5px] bg-black/20 px-2 py-[3px] text-[10px] font-bold tracking-[0.1em] backdrop-blur-sm">
+            АРХИВ
+          </span>
+        ) : (
+          <AccountActionsMenu account={account} accounts={accounts} />
+        )}
       </div>
 
       {/* Chip */}
@@ -179,9 +189,15 @@ function AccountCard({
           {account.accountNumber ?? "—"}
         </p>
         <p className="font-mono text-[20px] font-medium leading-none tracking-[-0.02em]">
-          {fmtBalance(Number(account.balance))}
+          {archived
+            ? "Закрыт"
+            : fmtBalance(Number(account.balance))}
         </p>
-        <p className="mt-[3px] text-[12px] opacity-65">{account.currency}</p>
+        <p className="mt-[3px] text-[12px] opacity-65">
+          {archived && account.archivedAt
+            ? `В архиве с ${new Date(account.archivedAt).toLocaleDateString("ru-RU")}`
+            : account.currency}
+        </p>
       </div>
     </div>
   );
@@ -494,10 +510,18 @@ function AccountCardSkeleton() {
 export function AccountsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const { data: accounts, isLoading, isError, error } = useGetAccounts();
+  const {
+    data: archivedAccounts,
+    isLoading: isArchivedLoading,
+    isError: isArchivedError,
+    error: archivedError,
+  } = useGetArchivedAccounts();
   const maxAccounts = USER_PLAN === "FREE" ? 3 : Number.POSITIVE_INFINITY;
   const hasReachedLimit = (accounts?.length ?? 0) >= maxAccounts;
 
   const errorMessage = error instanceof Error ? error.message : "Ошибка";
+  const archivedErrorMessage =
+    archivedError instanceof Error ? archivedError.message : "Ошибка";
 
   return (
     <PageContainer>
@@ -523,45 +547,93 @@ export function AccountsPage() {
         }
       /> */}
 
-      {/* Summary */}
-      {!isLoading && !isError && accounts && accounts.length > 0 && (
-        <SummaryCard accounts={accounts} />
-      )}
+      <Tabs defaultValue="active" className="mt-1 gap-5">
+        <div className="flex items-center justify-between gap-4">
+          <TabsList className="h-auto rounded-2xl border border-border bg-card p-1">
+            <TabsTrigger value="active" className="rounded-xl px-4 py-2 text-sm">
+              Активные
+            </TabsTrigger>
+            <TabsTrigger value="archived" className="rounded-xl px-4 py-2 text-sm">
+              Архив
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {isLoading &&
-          Array.from({ length: 3 }).map((_, i) => (
-            <AccountCardSkeleton key={i} />
-          ))}
+        <TabsContent value="active" className="mt-0 space-y-4">
+          {!isLoading && !isError && accounts && accounts.length > 0 && (
+            <SummaryCard accounts={accounts} />
+          )}
 
-        {isError && (
-          <p className="col-span-full text-sm text-red-500">
-            Ошибка загрузки: {errorMessage}
-          </p>
-        )}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {isLoading &&
+              Array.from({ length: 3 }).map((_, i) => (
+                <AccountCardSkeleton key={i} />
+              ))}
 
-        {!isLoading &&
-          !isError &&
-          accounts &&
-          accounts.map((account) => (
-            <AccountCard
-              key={account.id}
-              account={account}
-              accounts={accounts}
-            />
-          ))}
+            {isError && (
+              <p className="col-span-full text-sm text-red-500">
+                Ошибка загрузки: {errorMessage}
+              </p>
+            )}
 
-        {!isLoading && !isError && !hasReachedLimit && (
-          <AddCardSlot onAdd={() => setModalOpen(true)} />
-        )}
-      </div>
+            {!isLoading &&
+              !isError &&
+              accounts &&
+              accounts.map((account) => (
+                <AccountCard
+                  key={account.id}
+                  account={account}
+                  accounts={accounts}
+                />
+              ))}
 
-      {!isLoading && !isError && USER_PLAN === "FREE" && hasReachedLimit && (
-        <p className="mt-4 text-sm text-muted-foreground">
-          На бесплатном плане доступно только 3 счета.
-        </p>
-      )}
+            {!isLoading && !isError && !hasReachedLimit && (
+              <AddCardSlot onAdd={() => setModalOpen(true)} />
+            )}
+          </div>
+
+          {!isLoading && !isError && USER_PLAN === "FREE" && hasReachedLimit && (
+            <p className="text-sm text-muted-foreground">
+              На бесплатном плане доступно только 3 активных счета. Архивные счета в лимит не входят.
+            </p>
+          )}
+        </TabsContent>
+
+        <TabsContent value="archived" className="mt-0 space-y-4">
+          {!isArchivedLoading &&
+            !isArchivedError &&
+            (!archivedAccounts || archivedAccounts.length === 0) && (
+              <div className="rounded-2xl border border-dashed border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
+                <Archive className="mx-auto mb-3 h-5 w-5 opacity-60" />
+                Архивных счетов пока нет.
+              </div>
+            )}
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {isArchivedLoading &&
+              Array.from({ length: 2 }).map((_, i) => (
+                <AccountCardSkeleton key={i} />
+              ))}
+
+            {isArchivedError && (
+              <p className="col-span-full text-sm text-red-500">
+                Ошибка загрузки архива: {archivedErrorMessage}
+              </p>
+            )}
+
+            {!isArchivedLoading &&
+              !isArchivedError &&
+              archivedAccounts?.map((account) => (
+                <AccountCard
+                  key={account.id}
+                  account={account}
+                  accounts={[]}
+                  archived
+                />
+              ))}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <CreateAccountModal
         open={modalOpen}

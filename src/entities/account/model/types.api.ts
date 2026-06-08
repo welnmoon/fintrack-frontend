@@ -14,6 +14,8 @@ export interface GetAccount {
   balance: number;
   convertedBalance?: number;
   convertedCurrency?: CurrencyCode;
+  isArchived?: boolean;
+  archivedAt?: string | null;
 }
 
 export interface GetAccountOptions {
