@@ -179,11 +179,13 @@ function AccountCard({
   accounts,
   archived = false,
   canUnarchive = false,
+  unarchiveDisabledReason,
 }: {
   account: GetAccount;
   accounts: GetAccount[];
   archived?: boolean;
   canUnarchive?: boolean;
+  unarchiveDisabledReason?: string;
 }) {
   const { mutate: unarchiveAccount, isPending: isUnarchivePending } =
     useUnarchiveAccount(account.id);
@@ -238,6 +240,7 @@ function AccountCard({
               size="sm"
               variant="secondary"
               disabled={!canUnarchive || isUnarchivePending}
+              title={!canUnarchive ? unarchiveDisabledReason : undefined}
               className="h-8 rounded-lg border border-white/15 bg-white/15 px-3 text-[12px] text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
               onClick={() => {
                 unarchiveAccount(undefined, {
@@ -250,6 +253,11 @@ function AccountCard({
               <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
               {isUnarchivePending ? "Возвращаю..." : "Вернуть из архива"}
             </Button>
+            {!canUnarchive && unarchiveDisabledReason ? (
+              <p className="mt-2 text-[11px] leading-4 text-white/80">
+                {unarchiveDisabledReason}
+              </p>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -573,6 +581,10 @@ export function AccountsPage() {
   const maxAccounts = USER_PLAN === "FREE" ? 3 : Number.POSITIVE_INFINITY;
   const hasReachedLimit = (accounts?.length ?? 0) >= maxAccounts;
   const canUnarchive = !hasReachedLimit;
+  const unarchiveDisabledReason =
+    USER_PLAN === "FREE" && hasReachedLimit
+      ? "На бесплатном плане уже достигнут лимит в 3 активных счета."
+      : undefined;
 
   const errorMessage = error instanceof Error ? error.message : "Ошибка";
   const archivedErrorMessage =
@@ -685,6 +697,7 @@ export function AccountsPage() {
                   accounts={[]}
                   archived
                   canUnarchive={canUnarchive}
+                  unarchiveDisabledReason={unarchiveDisabledReason}
                 />
               ))}
           </div>

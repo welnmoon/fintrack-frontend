@@ -106,6 +106,11 @@ const chipConfig: Array<{
     activeClass: "bg-[#F2EDFC] border-[#9B6ED8] text-[#5A2E9A]",
   },
   {
+    emotion: "STRESS",
+    label: "≈ Стресс",
+    activeClass: "bg-[#F7ECEC] border-[#D85050] text-[#8D2C2C]",
+  },
+  {
     emotion: "NEUTRAL",
     label: "— Нейтрально",
     activeClass: "bg-[#F0EEE8] border-[#C0BDB4] text-[#5A5850]",
@@ -357,6 +362,7 @@ export function EmotionSummaryCard({
                   {[
                     { color: "#E8A020", label: `Импульсивно · ${formatCurrency(summary.impulsiveAmount, summary.currency)}` },
                     { color: "#9B6ED8", label: `Сожаление · ${formatCurrency(summary.regretAmount, summary.currency)}` },
+                    { color: "#D85050", label: `Стресс · ${formatCurrency(summary.stressAmount, summary.currency)}` },
                     { color: "#D8D4C8", label: "Остальное" },
                   ].map(({ color, label }) => (
                     <span
