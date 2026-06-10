@@ -205,7 +205,7 @@ export function EmotionSummaryCard({
 
   const filteredCategories = summary.topEmotionCategories.filter(
     (c) => c.emotion === selectedEmotion,
-  );
+  ).slice(0, 5);
 
   return (
     <Card>
